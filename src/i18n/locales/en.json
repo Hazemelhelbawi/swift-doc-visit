@@ -1,0 +1,174 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "services": "Services",
+    "clinics": "Clinics",
+    "book": "Book Appointment",
+    "contact": "Contact",
+    "login": "Login",
+    "signup": "Sign Up",
+    "logout": "Logout",
+    "dashboard": "Dashboard",
+    "myAppointments": "My Appointments"
+  },
+  "hero": {
+    "title": "Your Health, Our Priority",
+    "subtitle": "Expert medical care with a personal touch. Book your appointment today and experience healthcare reimagined.",
+    "cta": "Book Appointment",
+    "ctaSecondary": "Learn More",
+    "experience": "Years Experience",
+    "patients": "Happy Patients",
+    "rating": "Rating"
+  },
+  "about": {
+    "title": "About Dr. Sarah Mitchell",
+    "subtitle": "Meet Your Doctor",
+    "description": "With over 15 years of experience in internal medicine, I am dedicated to providing comprehensive, patient-centered care. My approach combines the latest medical advances with compassionate, personalized attention to help you achieve optimal health.",
+    "education": "Education & Qualifications",
+    "specializations": "Specializations",
+    "philosophy": "My Philosophy",
+    "philosophyText": "I believe in treating the whole person, not just symptoms. Every patient deserves to be heard, understood, and actively involved in their healthcare decisions."
+  },
+  "services": {
+    "title": "Our Services",
+    "subtitle": "Comprehensive Healthcare Solutions",
+    "description": "We offer a wide range of medical services to meet your healthcare needs.",
+    "generalCheckup": "General Checkup",
+    "generalCheckupDesc": "Comprehensive health assessments to monitor and maintain your well-being.",
+    "chronicCare": "Chronic Disease Management",
+    "chronicCareDesc": "Ongoing care and support for managing chronic conditions effectively.",
+    "preventive": "Preventive Care",
+    "preventiveDesc": "Proactive health screenings and vaccinations to prevent illness.",
+    "consultation": "Medical Consultation",
+    "consultationDesc": "Expert medical advice for your health concerns and questions.",
+    "labTests": "Laboratory Tests",
+    "labTestsDesc": "Comprehensive diagnostic testing for accurate health assessments.",
+    "followUp": "Follow-up Care",
+    "followUpDesc": "Continuous monitoring and care after treatments or procedures."
+  },
+  "clinics": {
+    "title": "Our Clinics",
+    "subtitle": "Visit Us",
+    "description": "Find a clinic location near you for convenient access to quality healthcare.",
+    "viewSchedule": "View Schedule",
+    "address": "Address",
+    "phone": "Phone",
+    "noClinicData": "No clinics available at the moment."
+  },
+  "booking": {
+    "title": "Book Your Appointment",
+    "subtitle": "Schedule a Visit",
+    "selectClinic": "Select Clinic",
+    "selectDate": "Select Date",
+    "selectTime": "Select Time Slot",
+    "patientInfo": "Patient Information",
+    "name": "Full Name",
+    "phone": "Phone Number",
+    "notes": "Additional Notes",
+    "notesPlaceholder": "Any specific concerns or requirements...",
+    "submit": "Confirm Booking",
+    "noSlots": "No available slots for this date",
+    "slotsAvailable": "slots available",
+    "loginRequired": "Please login to book an appointment",
+    "success": "Appointment booked successfully!",
+    "successMessage": "You will receive a confirmation shortly."
+  },
+  "contact": {
+    "title": "Get in Touch",
+    "subtitle": "Contact Us",
+    "description": "Have questions? Need to schedule a callback? We're here to help.",
+    "form": {
+      "name": "Your Name",
+      "phone": "Phone Number",
+      "message": "Your Message",
+      "messagePlaceholder": "How can we help you?",
+      "submit": "Send Message",
+      "success": "Message sent successfully!",
+      "successMessage": "We'll get back to you as soon as possible."
+    },
+    "info": {
+      "emergency": "For emergencies, please call",
+      "hours": "Working Hours",
+      "hoursValue": "Sun - Thu: 9:00 AM - 6:00 PM"
+    }
+  },
+  "auth": {
+    "login": "Login",
+    "signup": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "fullName": "Full Name",
+    "phone": "Phone Number",
+    "forgotPassword": "Forgot Password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "orContinueWith": "Or continue with",
+    "google": "Continue with Google",
+    "loginSuccess": "Welcome back!",
+    "signupSuccess": "Account created successfully!",
+    "logoutSuccess": "Logged out successfully"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back",
+    "overview": "Overview",
+    "clinics": "Manage Clinics",
+    "schedules": "Manage Schedules",
+    "appointments": "Appointments",
+    "consultations": "Consultation Requests",
+    "stats": {
+      "totalAppointments": "Total Appointments",
+      "pendingAppointments": "Pending",
+      "todayAppointments": "Today's Appointments",
+      "newConsultations": "New Consultations"
+    },
+    "actions": {
+      "addClinic": "Add Clinic",
+      "addSchedule": "Add Schedule",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "markContacted": "Mark Contacted",
+      "close": "Close"
+    }
+  },
+  "myAppointments": {
+    "title": "My Appointments",
+    "subtitle": "View and manage your appointments",
+    "noAppointments": "You don't have any appointments yet.",
+    "bookNow": "Book your first appointment"
+  },
+  "status": {
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "cancelled": "Cancelled",
+    "new": "New",
+    "contacted": "Contacted",
+    "closed": "Closed"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try Again",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "confirm": "Confirm",
+    "search": "Search",
+    "filter": "Filter",
+    "noData": "No data available"
+  },
+  "footer": {
+    "description": "Providing compassionate, comprehensive healthcare with a personal touch.",
+    "quickLinks": "Quick Links",
+    "contactInfo": "Contact Info",
+    "followUs": "Follow Us",
+    "rights": "All rights reserved."
+  }
+}
