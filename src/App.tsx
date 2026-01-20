@@ -9,6 +9,12 @@ import "@/i18n";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import About from "./pages/About";
+import Services from "./pages/Services";
+import Clinics from "./pages/Clinics";
+import Contact from "./pages/Contact";
+import Book from "./pages/Book";
+import MyAppointments from "./pages/MyAppointments";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +30,12 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/services" element={<Services />} />
+              <Route path="/clinics" element={<Clinics />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/book" element={<Book />} />
+              <Route path="/my-appointments" element={<MyAppointments />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
