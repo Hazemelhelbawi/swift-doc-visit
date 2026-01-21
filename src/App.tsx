@@ -17,6 +17,13 @@ import Book from "./pages/Book";
 import MyAppointments from "./pages/MyAppointments";
 import NotFound from "./pages/NotFound";
 
+// Admin pages
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminClinics from "./pages/admin/Clinics";
+import AdminSchedules from "./pages/admin/Schedules";
+import AdminAppointments from "./pages/admin/Appointments";
+import AdminConsultations from "./pages/admin/Consultations";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -36,6 +43,14 @@ const App = () => (
               <Route path="/contact" element={<Contact />} />
               <Route path="/book" element={<Book />} />
               <Route path="/my-appointments" element={<MyAppointments />} />
+              
+              {/* Admin Routes */}
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/clinics" element={<AdminClinics />} />
+              <Route path="/admin/schedules" element={<AdminSchedules />} />
+              <Route path="/admin/appointments" element={<AdminAppointments />} />
+              <Route path="/admin/consultations" element={<AdminConsultations />} />
+              
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
