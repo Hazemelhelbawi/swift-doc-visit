@@ -169,7 +169,11 @@ export type Database = {
           end_time: string
           id: string
           is_active: boolean
+          is_recurring: boolean
           max_patients: number
+          recurrence_days: number[] | null
+          recurrence_end_date: string | null
+          recurrence_pattern: string | null
           start_time: string
           updated_at: string
         }
@@ -180,7 +184,11 @@ export type Database = {
           end_time: string
           id?: string
           is_active?: boolean
+          is_recurring?: boolean
           max_patients?: number
+          recurrence_days?: number[] | null
+          recurrence_end_date?: string | null
+          recurrence_pattern?: string | null
           start_time: string
           updated_at?: string
         }
@@ -191,7 +199,11 @@ export type Database = {
           end_time?: string
           id?: string
           is_active?: boolean
+          is_recurring?: boolean
           max_patients?: number
+          recurrence_days?: number[] | null
+          recurrence_end_date?: string | null
+          recurrence_pattern?: string | null
           start_time?: string
           updated_at?: string
         }
@@ -231,6 +243,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_available_schedules: {
+        Args: { p_clinic_id: string; p_end_date: string; p_start_date: string }
+        Returns: {
+          clinic_id: string
+          end_time: string
+          is_recurring: boolean
+          max_patients: number
+          schedule_date: string
+          schedule_id: string
+          start_time: string
+        }[]
+      }
       get_schedule_booking_count: {
         Args: { schedule_uuid: string }
         Returns: number
