@@ -4,7 +4,8 @@ import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, User, Phone, FileText, CheckCircle, Building2, ArrowRight } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format, parseISO, isSameDay } from 'date-fns';
+import { format, parseISO, isSameDay, addDays, eachDayOfInterval, isAfter, isBefore } from 'date-fns';
+import { ar, enUS } from 'date-fns/locale';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -67,50 +68,85 @@ const Book = () => {
     },
   });
 
-  // Fetch schedules for selected clinic
-  const { data: schedules, isLoading: schedulesLoading } = useQuery({
-    queryKey: ['schedules', selectedClinic],
+  // Fetch schedules using the new function that handles recurring schedules
+  const { data: availableSchedules, isLoading: schedulesLoading } = useQuery({
+    queryKey: ['available-schedules', selectedClinic],
     queryFn: async () => {
+      const today = new Date().toISOString().split('T')[0];
+      const endDate = addDays(new Date(), 60).toISOString().split('T')[0]; // Look 60 days ahead
+      
+      // Try to use the new function first, fallback to direct query
+      const { data: functionData, error: functionError } = await supabase.rpc(
+        'get_available_schedules',
+        { p_clinic_id: selectedClinic, p_start_date: today, p_end_date: endDate }
+      );
+      
+      if (!functionError && functionData) {
+        return functionData as Array<{
+          schedule_id: string;
+          clinic_id: string;
+          schedule_date: string;
+          start_time: string;
+          end_time: string;
+          max_patients: number;
+          is_recurring: boolean;
+        }>;
+      }
+      
+      // Fallback to regular query if function doesn't exist
       const { data, error } = await supabase
         .from('schedules')
-        .select('*')
+        .select('id, clinic_id, date, start_time, end_time, max_patients, is_recurring')
         .eq('clinic_id', selectedClinic)
         .eq('is_active', true)
-        .gte('date', new Date().toISOString().split('T')[0])
+        .gte('date', today)
         .order('date')
         .order('start_time');
+      
       if (error) throw error;
-      return data;
+      
+      // Map to consistent format
+      return (data || []).map(s => ({
+        schedule_id: s.id,
+        clinic_id: s.clinic_id,
+        schedule_date: s.date,
+        start_time: s.start_time,
+        end_time: s.end_time,
+        max_patients: s.max_patients,
+        is_recurring: s.is_recurring || false,
+      }));
     },
     enabled: !!selectedClinic,
   });
 
   // Fetch booking counts for schedules
   const { data: bookingCounts } = useQuery({
-    queryKey: ['bookingCounts', schedules?.map(s => s.id)],
+    queryKey: ['bookingCounts', availableSchedules?.map(s => `${s.schedule_id}-${s.schedule_date}`)],
     queryFn: async () => {
-      if (!schedules) return {};
+      if (!availableSchedules) return {};
       const counts: Record<string, number> = {};
-      for (const schedule of schedules) {
-        const { data } = await supabase.rpc('get_schedule_booking_count', { schedule_uuid: schedule.id });
-        counts[schedule.id] = data || 0;
+      const uniqueScheduleIds = [...new Set(availableSchedules.map(s => s.schedule_id))];
+      
+      for (const scheduleId of uniqueScheduleIds) {
+        const { data } = await supabase.rpc('get_schedule_booking_count', { schedule_uuid: scheduleId });
+        counts[scheduleId] = data || 0;
       }
       return counts;
     },
-    enabled: !!schedules && schedules.length > 0,
+    enabled: !!availableSchedules && availableSchedules.length > 0,
   });
 
   // Available dates from schedules
   const availableDates = useMemo(() => {
-    if (!schedules) return [];
-    return [...new Set(schedules.map(s => s.date))].map(d => parseISO(d));
-  }, [schedules]);
+    if (!availableSchedules) return [];
+    return [...new Set(availableSchedules.map(s => s.schedule_date))].map(d => parseISO(d));
+  }, [availableSchedules]);
 
   // Schedules for selected date
   const schedulesForDate = useMemo(() => {
-    if (!schedules || !selectedDate) return [];
-    return schedules.filter(s => isSameDay(parseISO(s.date), selectedDate));
-  }, [schedules, selectedDate]);
+    if (!availableSchedules || !selectedDate) return [];
+    return availableSchedules.filter(s => isSameDay(parseISO(s.schedule_date), selectedDate));
+  }, [availableSchedules, selectedDate]);
 
   // Auto-advance from clinic when selected
   useEffect(() => {
@@ -273,7 +309,7 @@ const Book = () => {
                     setSelectedSchedule('');
                     form.reset();
                   }}>
-                    Book Another
+                    {t('booking.bookAnother')}
                   </Button>
                 </div>
               </motion.div>
@@ -342,7 +378,7 @@ const Book = () => {
                   <CardContent>
                     <div className="flex flex-col items-center">
                       <div className="mb-4 text-sm text-muted-foreground">
-                        Selected Clinic: <span className="font-medium text-foreground">{getClinicName(selectedClinic)}</span>
+                        {t('booking.selectedClinic')}: <span className="font-medium text-foreground">{getClinicName(selectedClinic)}</span>
                       </div>
                       {schedulesLoading ? (
                         <Skeleton className="h-80 w-full max-w-sm" />
@@ -363,7 +399,7 @@ const Book = () => {
                         />
                       )}
                       <Button variant="ghost" className="mt-4" onClick={() => { setStep('clinic'); setSelectedClinic(''); }}>
-                        ← Change Clinic
+                        ← {t('booking.changeClinic')}
                       </Button>
                     </div>
                   </CardContent>
@@ -386,18 +422,18 @@ const Book = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="mb-4 text-sm text-muted-foreground">
-                      {selectedDate && format(selectedDate, 'EEEE, MMMM d, yyyy')}
+                      {selectedDate && format(selectedDate, 'EEEE, MMMM d, yyyy', { locale: language === 'ar' ? ar : enUS })}
                     </div>
                     {schedulesForDate.length > 0 ? (
                       <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        {schedulesForDate.map(schedule => {
-                          const { available, isFull } = getSlotAvailability(schedule.id, schedule.max_patients);
+                        {schedulesForDate.map((schedule, index) => {
+                          const { available, isFull } = getSlotAvailability(schedule.schedule_id, schedule.max_patients);
                           return (
                             <button
-                              key={schedule.id}
+                              key={`${schedule.schedule_id}-${schedule.schedule_date}-${index}`}
                               onClick={() => {
                                 if (!isFull) {
-                                  setSelectedSchedule(schedule.id);
+                                  setSelectedSchedule(schedule.schedule_id);
                                   setStep('form');
                                 }
                               }}
@@ -405,7 +441,7 @@ const Book = () => {
                               className={`p-4 rounded-xl border-2 text-center transition-all ${
                                 isFull
                                   ? 'border-border bg-muted/50 cursor-not-allowed opacity-50'
-                                  : selectedSchedule === schedule.id
+                                  : selectedSchedule === schedule.schedule_id
                                     ? 'border-primary bg-primary/5'
                                     : 'border-border hover:border-primary/50'
                               }`}
@@ -414,7 +450,7 @@ const Book = () => {
                                 {schedule.start_time.slice(0, 5)} - {schedule.end_time.slice(0, 5)}
                               </div>
                               <div className={`text-sm mt-1 ${isFull ? 'text-destructive' : 'text-muted-foreground'}`}>
-                                {isFull ? 'Fully Booked' : `${available} ${t('booking.slotsAvailable')}`}
+                                {isFull ? t('booking.fullyBooked') : `${available} ${t('booking.slotsAvailable')}`}
                               </div>
                             </button>
                           );
@@ -424,7 +460,7 @@ const Book = () => {
                       <p className="text-center text-muted-foreground py-8">{t('booking.noSlots')}</p>
                     )}
                     <Button variant="ghost" className="mt-4" onClick={() => { setStep('date'); setSelectedDate(undefined); }}>
-                      ← Change Date
+                      ← {t('booking.changeDate')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -447,14 +483,14 @@ const Book = () => {
                   <CardContent>
                     <div className="mb-6 p-4 rounded-xl bg-muted/50 text-sm">
                       <div className="grid grid-cols-2 gap-2">
-                        <span className="text-muted-foreground">Clinic:</span>
+                        <span className="text-muted-foreground">{t('admin.clinic')}:</span>
                         <span className="font-medium">{getClinicName(selectedClinic)}</span>
-                        <span className="text-muted-foreground">Date:</span>
-                        <span className="font-medium">{selectedDate && format(selectedDate, 'MMM d, yyyy')}</span>
-                        <span className="text-muted-foreground">Time:</span>
+                        <span className="text-muted-foreground">{t('admin.date')}:</span>
+                        <span className="font-medium">{selectedDate && format(selectedDate, 'MMM d, yyyy', { locale: language === 'ar' ? ar : enUS })}</span>
+                        <span className="text-muted-foreground">{t('admin.time')}:</span>
                         <span className="font-medium" dir="ltr">
-                          {schedulesForDate.find(s => s.id === selectedSchedule)?.start_time.slice(0, 5)} - 
-                          {schedulesForDate.find(s => s.id === selectedSchedule)?.end_time.slice(0, 5)}
+                          {schedulesForDate.find(s => s.schedule_id === selectedSchedule)?.start_time.slice(0, 5)} - 
+                          {schedulesForDate.find(s => s.schedule_id === selectedSchedule)?.end_time.slice(0, 5)}
                         </span>
                       </div>
                     </div>
