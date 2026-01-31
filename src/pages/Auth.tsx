@@ -42,12 +42,25 @@ const Auth = () => {
         navigate('/');
       } else {
         const { error } = await signUp(formData.email, formData.password, formData.fullName);
-        if (error) throw error;
-        toast({ title: t('auth.signupSuccess') });
-        navigate('/');
+        if (error) {
+          // Handle specific error cases
+          if (error.message.includes('already registered') || error.message.includes('already exists')) {
+            toast({ 
+              title: t('auth.userExists'), 
+              description: t('auth.userExistsDescription'),
+              variant: 'destructive' 
+            });
+            return;
+          }
+          throw error;
+        }
+        toast({ 
+          title: t('auth.signupSuccess'),
+          description: t('auth.checkEmailDescription')
+        });
       }
     } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: t('common.error'), description: error.message, variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }

@@ -108,7 +108,10 @@
     "google": "Continue with Google",
     "loginSuccess": "Welcome back!",
     "signupSuccess": "Account created successfully!",
-    "logoutSuccess": "Logged out successfully"
+    "checkEmailDescription": "Please check your email to verify your account.",
+    "logoutSuccess": "Logged out successfully",
+    "userExists": "Account already exists",
+    "userExistsDescription": "An account with this email already exists. Please login instead."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -158,6 +161,7 @@
     "view": "View",
     "close": "Close",
     "back": "Back",
+    "backToHome": "Back to Home",
     "next": "Next",
     "confirm": "Confirm",
     "search": "Search",
