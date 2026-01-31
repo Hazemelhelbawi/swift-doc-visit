@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Layout } from '@/components/layout/Layout';
+import { lovable } from '@/integrations/lovable';
 
 const Auth = () => {
   const { t } = useTranslation();
@@ -53,7 +54,9 @@ const Auth = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    const { error } = await signInWithGoogle();
+    const { error } = await lovable.auth.signInWithOAuth('google', {
+      redirect_uri: window.location.origin,
+    });
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     }
