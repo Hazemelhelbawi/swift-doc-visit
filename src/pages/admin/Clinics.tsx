@@ -22,6 +22,10 @@ interface Clinic {
   address_ar: string | null;
   phone: string | null;
   is_active: boolean;
+  doctor_name: string | null;
+  doctor_name_ar: string | null;
+  doctor_specialty: string | null;
+  doctor_specialty_ar: string | null;
 }
 
 export default function AdminClinics() {
@@ -37,6 +41,10 @@ export default function AdminClinics() {
     address_ar: '',
     phone: '',
     is_active: true,
+    doctor_name: '',
+    doctor_name_ar: '',
+    doctor_specialty: '',
+    doctor_specialty_ar: '',
   });
 
   const { data: clinics, isLoading } = useQuery({
@@ -60,6 +68,10 @@ export default function AdminClinics() {
         address_ar: data.address_ar || null,
         phone: data.phone || null,
         is_active: data.is_active,
+        doctor_name: data.doctor_name || null,
+        doctor_name_ar: data.doctor_name_ar || null,
+        doctor_specialty: data.doctor_specialty || null,
+        doctor_specialty_ar: data.doctor_specialty_ar || null,
       });
       if (error) throw error;
     },
@@ -82,6 +94,10 @@ export default function AdminClinics() {
           address_ar: data.address_ar || null,
           phone: data.phone || null,
           is_active: data.is_active,
+          doctor_name: data.doctor_name || null,
+          doctor_name_ar: data.doctor_name_ar || null,
+          doctor_specialty: data.doctor_specialty || null,
+          doctor_specialty_ar: data.doctor_specialty_ar || null,
         })
         .eq('id', id);
       if (error) throw error;
@@ -107,7 +123,18 @@ export default function AdminClinics() {
   });
 
   const resetForm = () => {
-    setFormData({ name: '', name_ar: '', address: '', address_ar: '', phone: '', is_active: true });
+    setFormData({ 
+      name: '', 
+      name_ar: '', 
+      address: '', 
+      address_ar: '', 
+      phone: '', 
+      is_active: true,
+      doctor_name: '',
+      doctor_name_ar: '',
+      doctor_specialty: '',
+      doctor_specialty_ar: '',
+    });
     setEditingClinic(null);
     setIsDialogOpen(false);
   };
@@ -121,6 +148,10 @@ export default function AdminClinics() {
       address_ar: clinic.address_ar || '',
       phone: clinic.phone || '',
       is_active: clinic.is_active,
+      doctor_name: clinic.doctor_name || '',
+      doctor_name_ar: clinic.doctor_name_ar || '',
+      doctor_specialty: clinic.doctor_specialty || '',
+      doctor_specialty_ar: clinic.doctor_specialty_ar || '',
     });
     setIsDialogOpen(true);
   };
@@ -196,6 +227,46 @@ export default function AdminClinics() {
                       onChange={(e) => setFormData({ ...formData, address_ar: e.target.value })}
                       dir="rtl"
                     />
+                  </div>
+                </div>
+                {/* Doctor Info Section */}
+                <div className="border-t pt-4 mt-2">
+                  <p className="text-sm font-medium text-muted-foreground mb-3">{t('admin.doctor')} ({t('admin.optional')})</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>{t('admin.doctorName')} (EN)</Label>
+                      <Input
+                        value={formData.doctor_name}
+                        onChange={(e) => setFormData({ ...formData, doctor_name: e.target.value })}
+                        placeholder="Dr. John Smith"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{t('admin.doctorName')} (AR)</Label>
+                      <Input
+                        value={formData.doctor_name_ar}
+                        onChange={(e) => setFormData({ ...formData, doctor_name_ar: e.target.value })}
+                        dir="rtl"
+                        placeholder="د. جون سميث"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{t('admin.specialty')} (EN)</Label>
+                      <Input
+                        value={formData.doctor_specialty}
+                        onChange={(e) => setFormData({ ...formData, doctor_specialty: e.target.value })}
+                        placeholder="Internal Medicine"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{t('admin.specialty')} (AR)</Label>
+                      <Input
+                        value={formData.doctor_specialty_ar}
+                        onChange={(e) => setFormData({ ...formData, doctor_specialty_ar: e.target.value })}
+                        dir="rtl"
+                        placeholder="الطب الباطني"
+                      />
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-2">

@@ -1,4 +1,4 @@
-import { Building2, Calendar, ClipboardList, MessageSquare, LayoutDashboard, ChevronLeft, ChevronRight, Home } from 'lucide-react';
+import { Building2, Calendar, ClipboardList, MessageSquare, LayoutDashboard, ChevronLeft, ChevronRight, Home, Settings } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useTranslation } from 'react-i18next';
 import {
@@ -27,6 +27,7 @@ export function AdminSidebar() {
     { title: t('admin.schedules'), url: '/admin/schedules', icon: Calendar },
     { title: t('admin.appointments'), url: '/admin/appointments', icon: ClipboardList },
     { title: t('admin.consultations'), url: '/admin/consultations', icon: MessageSquare },
+    { title: t('admin.settings'), url: '/admin/settings', icon: Settings },
   ];
 
   return (

@@ -335,24 +335,41 @@ const Book = () => {
                       </div>
                     ) : clinics && clinics.length > 0 ? (
                       <div className="grid md:grid-cols-2 gap-4">
-                        {clinics.map(clinic => (
-                          <button
-                            key={clinic.id}
-                            onClick={() => setSelectedClinic(clinic.id)}
-                            className={`p-4 rounded-xl border-2 text-left transition-all ${
-                              selectedClinic === clinic.id
-                                ? 'border-primary bg-primary/5'
-                                : 'border-border hover:border-primary/50'
-                            }`}
-                          >
-                            <h3 className="font-semibold">
-                              {language === 'ar' && clinic.name_ar ? clinic.name_ar : clinic.name}
-                            </h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {language === 'ar' && clinic.address_ar ? clinic.address_ar : clinic.address}
-                            </p>
-                          </button>
-                        ))}
+                        {clinics.map(clinic => {
+                          const doctorName = language === 'ar' && (clinic as any).doctor_name_ar 
+                            ? (clinic as any).doctor_name_ar 
+                            : (clinic as any).doctor_name;
+                          const doctorSpecialty = language === 'ar' && (clinic as any).doctor_specialty_ar 
+                            ? (clinic as any).doctor_specialty_ar 
+                            : (clinic as any).doctor_specialty;
+                          
+                          return (
+                            <button
+                              key={clinic.id}
+                              onClick={() => setSelectedClinic(clinic.id)}
+                              className={`p-4 rounded-xl border-2 text-left transition-all ${
+                                selectedClinic === clinic.id
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-border hover:border-primary/50'
+                              }`}
+                            >
+                              <h3 className="font-semibold">
+                                {language === 'ar' && clinic.name_ar ? clinic.name_ar : clinic.name}
+                              </h3>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {language === 'ar' && clinic.address_ar ? clinic.address_ar : clinic.address}
+                              </p>
+                              {doctorName && (
+                                <div className="mt-3 pt-3 border-t border-border">
+                                  <p className="text-sm font-medium text-primary">{doctorName}</p>
+                                  {doctorSpecialty && (
+                                    <p className="text-xs text-muted-foreground">{doctorSpecialty}</p>
+                                  )}
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     ) : (
                       <p className="text-center text-muted-foreground py-8">{t('clinics.noClinicData')}</p>

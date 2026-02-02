@@ -73,6 +73,10 @@ export type Database = {
           address: string
           address_ar: string | null
           created_at: string
+          doctor_name: string | null
+          doctor_name_ar: string | null
+          doctor_specialty: string | null
+          doctor_specialty_ar: string | null
           id: string
           is_active: boolean
           name: string
@@ -84,6 +88,10 @@ export type Database = {
           address: string
           address_ar?: string | null
           created_at?: string
+          doctor_name?: string | null
+          doctor_name_ar?: string | null
+          doctor_specialty?: string | null
+          doctor_specialty_ar?: string | null
           id?: string
           is_active?: boolean
           name: string
@@ -95,6 +103,10 @@ export type Database = {
           address?: string
           address_ar?: string | null
           created_at?: string
+          doctor_name?: string | null
+          doctor_name_ar?: string | null
+          doctor_specialty?: string | null
+          doctor_specialty_ar?: string | null
           id?: string
           is_active?: boolean
           name?: string
@@ -216,6 +228,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      site_settings: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
