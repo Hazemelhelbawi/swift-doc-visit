@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Save, User, Image, Stethoscope, GraduationCap, Award, Heart, Plus, Trash2, Loader2 } from 'lucide-react';
+import { Save, User, Image, Stethoscope, GraduationCap, Award, Heart, Plus, Trash2, Loader2, Palette } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -12,49 +12,174 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { 
-  useDoctorProfile, 
-  useHeroContent, 
-  useServicesContent,
-  DoctorProfile,
-  HeroContent,
-  ServicesContent 
-} from '@/hooks/useSiteSettings';
+import { useDoctor } from '@/contexts/DoctorContext';
+
+interface Education {
+  degree: string;
+  degree_ar: string;
+  institution: string;
+  institution_ar: string;
+  year: string;
+}
+
+interface LocalizedText {
+  en: string;
+  ar: string;
+}
+
+interface DoctorProfile {
+  name: string;
+  name_ar: string;
+  specialty: string;
+  specialty_ar: string;
+  image_url?: string;
+  experience_years: number;
+  patients_count: number;
+  rating: number;
+  philosophy: string;
+  philosophy_ar: string;
+  education: Education[];
+  specializations: LocalizedText[];
+  achievements: LocalizedText[];
+}
+
+interface HeroContent {
+  title: string;
+  title_ar: string;
+  subtitle: string;
+  subtitle_ar: string;
+  tagline: string;
+  tagline_ar: string;
+  image_url?: string;
+}
+
+interface ServiceItem {
+  icon: string;
+  title: string;
+  title_ar: string;
+  description: string;
+  description_ar: string;
+}
+
+interface ServicesContent {
+  items: ServiceItem[];
+}
+
+interface ThemeSettings {
+  primary_color: string;
+  accent_color: string;
+}
 
 export default function AdminSettings() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { doctorId } = useDoctor();
   
-  const { data: doctorProfile, isLoading: loadingDoctor } = useDoctorProfile();
-  const { data: heroContent, isLoading: loadingHero } = useHeroContent();
-  const { data: servicesContent, isLoading: loadingServices } = useServicesContent();
+  // Fetch data with doctor_id filter
+  const { data: doctorProfileData, isLoading: loadingDoctor } = useQuery({
+    queryKey: ['site-settings', 'doctor_profile', doctorId],
+    queryFn: async () => {
+      if (!doctorId) return null;
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('value')
+        .eq('key', 'doctor_profile')
+        .eq('doctor_id', doctorId)
+        .maybeSingle();
+      if (error) throw error;
+      return (data?.value as unknown) as DoctorProfile | null;
+    },
+    enabled: !!doctorId,
+  });
+
+  const { data: heroContentData, isLoading: loadingHero } = useQuery({
+    queryKey: ['site-settings', 'hero_content', doctorId],
+    queryFn: async () => {
+      if (!doctorId) return null;
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('value')
+        .eq('key', 'hero_content')
+        .eq('doctor_id', doctorId)
+        .maybeSingle();
+      if (error) throw error;
+      return (data?.value as unknown) as HeroContent | null;
+    },
+    enabled: !!doctorId,
+  });
+
+  const { data: servicesContentData, isLoading: loadingServices } = useQuery({
+    queryKey: ['site-settings', 'services', doctorId],
+    queryFn: async () => {
+      if (!doctorId) return null;
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('value')
+        .eq('key', 'services')
+        .eq('doctor_id', doctorId)
+        .maybeSingle();
+      if (error) throw error;
+      return (data?.value as unknown) as ServicesContent | null;
+    },
+    enabled: !!doctorId,
+  });
+
+  const { data: themeData, isLoading: loadingTheme } = useQuery({
+    queryKey: ['site-settings', 'theme_settings', doctorId],
+    queryFn: async () => {
+      if (!doctorId) return null;
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('value')
+        .eq('key', 'theme_settings')
+        .eq('doctor_id', doctorId)
+        .maybeSingle();
+      if (error) throw error;
+      const value = (data?.value as unknown) as Record<string, string> | null;
+      return {
+        primary_color: value?.primary_color || '#1DAFA1',
+        accent_color: value?.accent_color || '#E8655A',
+      };
+    },
+    enabled: !!doctorId,
+  });
 
   const [doctor, setDoctor] = useState<DoctorProfile | null>(null);
   const [hero, setHero] = useState<HeroContent | null>(null);
   const [services, setServices] = useState<ServicesContent | null>(null);
+  const [theme, setTheme] = useState<ThemeSettings>({ primary_color: '#1DAFA1', accent_color: '#E8655A' });
 
-  // Initialize state when data loads
-  useState(() => {
-    if (doctorProfile && !doctor) setDoctor(doctorProfile);
-    if (heroContent && !hero) setHero(heroContent);
-    if (servicesContent && !services) setServices(servicesContent);
-  });
-
-  // Use effect-like pattern with conditional update
-  if (doctorProfile && !doctor) setDoctor(doctorProfile);
-  if (heroContent && !hero) setHero(heroContent);
-  if (servicesContent && !services) setServices(servicesContent);
+  // Sync state with loaded data
+  useEffect(() => {
+    if (doctorProfileData && !doctor) setDoctor(doctorProfileData);
+  }, [doctorProfileData]);
+  
+  useEffect(() => {
+    if (heroContentData && !hero) setHero(heroContentData);
+  }, [heroContentData]);
+  
+  useEffect(() => {
+    if (servicesContentData && !services) setServices(servicesContentData);
+  }, [servicesContentData]);
+  
+  useEffect(() => {
+    if (themeData) setTheme(themeData);
+  }, [themeData]);
 
   const updateMutation = useMutation({
-    mutationFn: async ({ key, value }: { key: string; value: any }) => {
+    mutationFn: async ({ key, value }: { key: string; value: DoctorProfile | HeroContent | ServicesContent | ThemeSettings }) => {
+      if (!doctorId) throw new Error('No doctor context');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await supabase
         .from('site_settings')
-        .update({ value })
-        .eq('key', key);
+        .update({ value: value as any })
+        .eq('key', key)
+        .eq('doctor_id', doctorId);
       if (error) throw error;
     },
     onSuccess: (_, { key }) => {
-      queryClient.invalidateQueries({ queryKey: ['site-settings', key] });
+      queryClient.invalidateQueries({ queryKey: ['site-settings', key, doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['theme-settings', doctorId] });
       toast.success(t('admin.savedSuccessfully'));
     },
     onError: () => toast.error(t('admin.errorSaving')),
@@ -70,6 +195,10 @@ export default function AdminSettings() {
 
   const handleSaveServices = () => {
     if (services) updateMutation.mutate({ key: 'services', value: services });
+  };
+
+  const handleSaveTheme = () => {
+    updateMutation.mutate({ key: 'theme_settings', value: theme });
   };
 
   const addEducation = () => {
@@ -142,7 +271,7 @@ export default function AdminSettings() {
     }
   };
 
-  const isLoading = loadingDoctor || loadingHero || loadingServices;
+  const isLoading = loadingDoctor || loadingHero || loadingServices || loadingTheme;
 
   if (isLoading) {
     return (
@@ -175,6 +304,10 @@ export default function AdminSettings() {
             <TabsTrigger value="services" className="gap-2">
               <Stethoscope className="h-4 w-4" />
               {t('admin.services')}
+            </TabsTrigger>
+            <TabsTrigger value="theme" className="gap-2">
+              <Palette className="h-4 w-4" />
+              {t('admin.theme') || 'Theme'}
             </TabsTrigger>
           </TabsList>
 
@@ -641,6 +774,94 @@ export default function AdminSettings() {
               </Card>
             )}
             <Button onClick={handleSaveServices} disabled={updateMutation.isPending} className="w-full sm:w-auto">
+              <Save className="h-4 w-4 mr-2" />
+              {updateMutation.isPending ? t('common.saving') : t('admin.saveChanges')}
+            </Button>
+          </TabsContent>
+
+          {/* Theme Tab */}
+          <TabsContent value="theme" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Palette className="h-5 w-5" />
+                  {t('admin.themeColors') || 'Theme Colors'}
+                </CardTitle>
+                <CardDescription>{t('admin.themeDescription') || 'Customize your website colors. Changes will apply across all pages.'}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-6 sm:grid-cols-2">
+                  <div className="space-y-3">
+                    <Label>{t('admin.primaryColor') || 'Primary Color'}</Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={theme.primary_color}
+                        onChange={(e) => setTheme({ ...theme, primary_color: e.target.value })}
+                        className="w-16 h-10 rounded-lg border border-border cursor-pointer"
+                      />
+                      <Input
+                        value={theme.primary_color}
+                        onChange={(e) => setTheme({ ...theme, primary_color: e.target.value })}
+                        placeholder="#1DAFA1"
+                        className="flex-1"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {t('admin.primaryColorHint') || 'Used for buttons, links, and accents'}
+                    </p>
+                  </div>
+                  <div className="space-y-3">
+                    <Label>{t('admin.accentColor') || 'Accent Color'}</Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={theme.accent_color}
+                        onChange={(e) => setTheme({ ...theme, accent_color: e.target.value })}
+                        className="w-16 h-10 rounded-lg border border-border cursor-pointer"
+                      />
+                      <Input
+                        value={theme.accent_color}
+                        onChange={(e) => setTheme({ ...theme, accent_color: e.target.value })}
+                        placeholder="#E8655A"
+                        className="flex-1"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {t('admin.accentColorHint') || 'Used for highlights and secondary elements'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Color Preview */}
+                <div className="p-6 rounded-xl border border-border bg-muted/30">
+                  <p className="text-sm font-medium mb-4">{t('admin.colorPreview') || 'Preview'}</p>
+                  <div className="flex flex-wrap gap-4">
+                    <div 
+                      className="w-20 h-20 rounded-lg shadow-md flex items-center justify-center text-white text-xs font-medium"
+                      style={{ backgroundColor: theme.primary_color }}
+                    >
+                      Primary
+                    </div>
+                    <div 
+                      className="w-20 h-20 rounded-lg shadow-md flex items-center justify-center text-white text-xs font-medium"
+                      style={{ backgroundColor: theme.accent_color }}
+                    >
+                      Accent
+                    </div>
+                    <div className="flex-1 p-4 bg-card rounded-lg border border-border">
+                      <button
+                        className="px-4 py-2 rounded-md text-white text-sm font-medium"
+                        style={{ backgroundColor: theme.primary_color }}
+                      >
+                        {t('admin.sampleButton') || 'Sample Button'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Button onClick={handleSaveTheme} disabled={updateMutation.isPending} className="w-full sm:w-auto">
               <Save className="h-4 w-4 mr-2" />
               {updateMutation.isPending ? t('common.saving') : t('admin.saveChanges')}
             </Button>

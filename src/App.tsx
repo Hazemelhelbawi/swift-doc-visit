@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { DoctorProvider } from "@/contexts/DoctorContext";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import "@/i18n";
 
 import Index from "./pages/Index";
@@ -30,35 +32,39 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/services" element={<Services />} />
-              <Route path="/clinics" element={<Clinics />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/book" element={<Book />} />
-              <Route path="/my-appointments" element={<MyAppointments />} />
-              
-              {/* Admin Routes */}
-              <Route path="/dashboard" element={<AdminDashboard />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/clinics" element={<AdminClinics />} />
-              <Route path="/admin/schedules" element={<AdminSchedules />} />
-              <Route path="/admin/appointments" element={<AdminAppointments />} />
-              <Route path="/admin/consultations" element={<AdminConsultations />} />
-              <Route path="/admin/settings" element={<AdminSettings />} />
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
+      <DoctorProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/services" element={<Services />} />
+                  <Route path="/clinics" element={<Clinics />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/book" element={<Book />} />
+                  <Route path="/my-appointments" element={<MyAppointments />} />
+                  
+                  {/* Admin Routes */}
+                  <Route path="/dashboard" element={<AdminDashboard />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/clinics" element={<AdminClinics />} />
+                  <Route path="/admin/schedules" element={<AdminSchedules />} />
+                  <Route path="/admin/appointments" element={<AdminAppointments />} />
+                  <Route path="/admin/consultations" element={<AdminConsultations />} />
+                  <Route path="/admin/settings" element={<AdminSettings />} />
+                  
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </DoctorProvider>
     </LanguageProvider>
   </QueryClientProvider>
 );

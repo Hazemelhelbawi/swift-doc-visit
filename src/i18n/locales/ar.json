@@ -326,6 +326,28 @@
     "noRecentAppointments": "لا توجد مواعيد حديثة",
     "noRecentConsultations": "لا توجد استشارات حديثة",
     "updateProfile": "تحديث الملف",
-    "doctor": "الطبيب"
+    "doctor": "الطبيب",
+    "theme": "المظهر",
+    "themeColors": "ألوان المظهر",
+    "themeDescription": "خصص ألوان موقعك. ستُطبق التغييرات على جميع الصفحات.",
+    "primaryColor": "اللون الأساسي",
+    "accentColor": "لون التمييز",
+    "primaryColorHint": "يُستخدم للأزرار والروابط والتمييزات",
+    "accentColorHint": "يُستخدم للإبرازات والعناصر الثانوية",
+    "colorPreview": "معاينة",
+    "sampleButton": "زر نموذجي",
+    "doctorSpecialty": "الطبيب / المتخصص"
+  },
+  "features": {
+    "easyBooking": "حجز سهل",
+    "easyBookingDesc": "احجز مواعيدك عبر الإنترنت في دقائق",
+    "trustedCare": "رعاية موثوقة",
+    "trustedCareDesc": "طبيب معتمد بسنوات من الخبرة",
+    "patientFirst": "المريض أولاً",
+    "patientFirstDesc": "رعاية شخصية مصممة لاحتياجاتك"
+  },
+  "cta": {
+    "title": "مستعد للسيطرة على صحتك؟",
+    "subtitle": "احجز موعدك اليوم واختبر رعاية صحية شخصية تضعك في المقام الأول."
   }
 }

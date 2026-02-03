@@ -326,6 +326,28 @@
     "noRecentAppointments": "No recent appointments",
     "noRecentConsultations": "No recent consultations",
     "updateProfile": "Update Profile",
-    "doctor": "Doctor"
+    "doctor": "Doctor",
+    "theme": "Theme",
+    "themeColors": "Theme Colors",
+    "themeDescription": "Customize your website colors. Changes will apply across all pages.",
+    "primaryColor": "Primary Color",
+    "accentColor": "Accent Color",
+    "primaryColorHint": "Used for buttons, links, and accents",
+    "accentColorHint": "Used for highlights and secondary elements",
+    "colorPreview": "Preview",
+    "sampleButton": "Sample Button",
+    "doctorSpecialty": "Doctor / Specialist"
+  },
+  "features": {
+    "easyBooking": "Easy Booking",
+    "easyBookingDesc": "Book appointments online in minutes",
+    "trustedCare": "Trusted Care",
+    "trustedCareDesc": "Board-certified physician with years of experience",
+    "patientFirst": "Patient First",
+    "patientFirstDesc": "Personalized care tailored to your needs"
+  },
+  "cta": {
+    "title": "Ready to Take Control of Your Health?",
+    "subtitle": "Book your appointment today and experience personalized healthcare that puts you first."
   }
 }

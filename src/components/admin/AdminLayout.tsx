@@ -35,12 +35,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <SidebarProvider>
-      <div className={`min-h-screen flex w-full bg-muted/30 ${language === 'ar' ? 'rtl' : 'ltr'}`}>
+      <div className={`min-h-screen flex w-full bg-muted/30`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
         <AdminSidebar />
         <div className="flex-1 flex flex-col">
-          <header className="h-14 border-b border-border bg-background flex items-center px-4 gap-4">
+          <header className={`h-14 border-b border-border bg-background flex items-center px-4 gap-4 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
             <SidebarTrigger />
-            <h1 className="font-semibold text-foreground">Admin Dashboard</h1>
+            <h1 className="font-semibold text-foreground">{language === 'ar' ? 'لوحة تحكم المدير' : 'Admin Dashboard'}</h1>
           </header>
           <main className="flex-1 p-6 overflow-auto">
             {children}

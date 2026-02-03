@@ -1,6 +1,7 @@
 import { Building2, Calendar, ClipboardList, MessageSquare, LayoutDashboard, ChevronLeft, ChevronRight, Home, Settings } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Sidebar,
   SidebarContent,
@@ -18,8 +19,10 @@ import { Button } from '@/components/ui/button';
 
 export function AdminSidebar() {
   const { t } = useTranslation();
+  const { language } = useLanguage();
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === 'collapsed';
+  const isRTL = language === 'ar';
 
   const menuItems = [
     { title: t('admin.dashboard'), url: '/admin', icon: LayoutDashboard },
@@ -31,9 +34,13 @@ export function AdminSidebar() {
   ];
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border">
+    <Sidebar 
+      collapsible="icon" 
+      className="border-r border-border"
+      side={isRTL ? 'right' : 'left'}
+    >
       <SidebarHeader className="border-b border-border p-4">
-        <div className="flex items-center gap-2">
+        <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <span className="text-primary-foreground font-bold text-sm">DR</span>
           </div>
@@ -54,7 +61,7 @@ export function AdminSidebar() {
                     <NavLink 
                       to={item.url} 
                       end={item.url === '/admin'}
-                      className="flex items-center gap-3 hover:bg-muted/50 rounded-md transition-colors"
+                      className={`flex items-center gap-3 hover:bg-muted/50 rounded-md transition-colors ${isRTL ? 'flex-row-reverse' : ''}`}
                       activeClassName="bg-primary/10 text-primary font-medium"
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
@@ -71,7 +78,7 @@ export function AdminSidebar() {
       <SidebarFooter className="border-t border-border p-2 space-y-2">
         <NavLink 
           to="/" 
-          className="flex items-center gap-3 px-3 py-2 hover:bg-muted/50 rounded-md transition-colors text-muted-foreground hover:text-foreground"
+          className={`flex items-center gap-3 px-3 py-2 hover:bg-muted/50 rounded-md transition-colors text-muted-foreground hover:text-foreground ${isRTL ? 'flex-row-reverse' : ''}`}
         >
           <Home className="h-4 w-4 shrink-0" />
           {!collapsed && <span>{t('common.backToHome')}</span>}
@@ -82,7 +89,10 @@ export function AdminSidebar() {
           onClick={toggleSidebar}
           className="w-full justify-center"
         >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          {collapsed 
+            ? (isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />) 
+            : (isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />)
+          }
         </Button>
       </SidebarFooter>
     </Sidebar>
