@@ -144,22 +144,35 @@ export default function AdminSettings() {
     enabled: !!doctorId,
   });
 
-  const [doctor, setDoctor] = useState<DoctorProfile | null>(null);
-  const [hero, setHero] = useState<HeroContent | null>(null);
-  const [services, setServices] = useState<ServicesContent | null>(null);
+  const defaultDoctor: DoctorProfile = {
+    name: '', name_ar: '', specialty: '', specialty_ar: '',
+    image_url: '', experience_years: 0, patients_count: 0, rating: 5,
+    philosophy: '', philosophy_ar: '', education: [], specializations: [], achievements: []
+  };
+
+  const defaultHero: HeroContent = {
+    title: '', title_ar: '', subtitle: '', subtitle_ar: '',
+    tagline: '', tagline_ar: '', image_url: ''
+  };
+
+  const defaultServices: ServicesContent = { items: [] };
+
+  const [doctor, setDoctor] = useState<DoctorProfile>(defaultDoctor);
+  const [hero, setHero] = useState<HeroContent>(defaultHero);
+  const [services, setServices] = useState<ServicesContent>(defaultServices);
   const [theme, setTheme] = useState<ThemeSettings>({ primary_color: '#1DAFA1', accent_color: '#E8655A' });
 
   // Sync state with loaded data
   useEffect(() => {
-    if (doctorProfileData && !doctor) setDoctor(doctorProfileData);
+    if (doctorProfileData) setDoctor(doctorProfileData);
   }, [doctorProfileData]);
   
   useEffect(() => {
-    if (heroContentData && !hero) setHero(heroContentData);
+    if (heroContentData) setHero(heroContentData);
   }, [heroContentData]);
   
   useEffect(() => {
-    if (servicesContentData && !services) setServices(servicesContentData);
+    if (servicesContentData) setServices(servicesContentData);
   }, [servicesContentData]);
   
   useEffect(() => {
@@ -169,32 +182,52 @@ export default function AdminSettings() {
   const updateMutation = useMutation({
     mutationFn: async ({ key, value }: { key: string; value: DoctorProfile | HeroContent | ServicesContent | ThemeSettings }) => {
       if (!doctorId) throw new Error('No doctor context');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await supabase
+      
+      // First try to update existing record
+      const { data: existing } = await supabase
         .from('site_settings')
-        .update({ value: value as any })
+        .select('id')
         .eq('key', key)
-        .eq('doctor_id', doctorId);
-      if (error) throw error;
+        .eq('doctor_id', doctorId)
+        .maybeSingle();
+      
+      if (existing) {
+        // Update existing record
+        const { error } = await supabase
+          .from('site_settings')
+          .update({ value: value as any })
+          .eq('key', key)
+          .eq('doctor_id', doctorId);
+        if (error) throw error;
+      } else {
+        // Insert new record
+        const { error } = await supabase
+          .from('site_settings')
+          .insert({ key, value: value as any, doctor_id: doctorId });
+        if (error) throw error;
+      }
     },
     onSuccess: (_, { key }) => {
       queryClient.invalidateQueries({ queryKey: ['site-settings', key, doctorId] });
       queryClient.invalidateQueries({ queryKey: ['theme-settings', doctorId] });
       toast.success(t('admin.savedSuccessfully'));
     },
-    onError: () => toast.error(t('admin.errorSaving')),
+    onError: (error) => {
+      console.error('Save error:', error);
+      toast.error(t('admin.errorSaving'));
+    },
   });
 
   const handleSaveDoctor = () => {
-    if (doctor) updateMutation.mutate({ key: 'doctor_profile', value: doctor });
+    updateMutation.mutate({ key: 'doctor_profile', value: doctor });
   };
 
   const handleSaveHero = () => {
-    if (hero) updateMutation.mutate({ key: 'hero_content', value: hero });
+    updateMutation.mutate({ key: 'hero_content', value: hero });
   };
 
   const handleSaveServices = () => {
-    if (services) updateMutation.mutate({ key: 'services', value: services });
+    updateMutation.mutate({ key: 'services', value: services });
   };
 
   const handleSaveTheme = () => {
@@ -202,73 +235,57 @@ export default function AdminSettings() {
   };
 
   const addEducation = () => {
-    if (doctor) {
-      setDoctor({
-        ...doctor,
-        education: [...doctor.education, { degree: '', degree_ar: '', institution: '', institution_ar: '', year: '' }]
-      });
-    }
+    setDoctor({
+      ...doctor,
+      education: [...(doctor.education || []), { degree: '', degree_ar: '', institution: '', institution_ar: '', year: '' }]
+    });
   };
 
   const removeEducation = (index: number) => {
-    if (doctor) {
-      setDoctor({
-        ...doctor,
-        education: doctor.education.filter((_, i) => i !== index)
-      });
-    }
+    setDoctor({
+      ...doctor,
+      education: doctor.education.filter((_, i) => i !== index)
+    });
   };
 
   const addSpecialization = () => {
-    if (doctor) {
-      setDoctor({
-        ...doctor,
-        specializations: [...doctor.specializations, { en: '', ar: '' }]
-      });
-    }
+    setDoctor({
+      ...doctor,
+      specializations: [...(doctor.specializations || []), { en: '', ar: '' }]
+    });
   };
 
   const removeSpecialization = (index: number) => {
-    if (doctor) {
-      setDoctor({
-        ...doctor,
-        specializations: doctor.specializations.filter((_, i) => i !== index)
-      });
-    }
+    setDoctor({
+      ...doctor,
+      specializations: doctor.specializations.filter((_, i) => i !== index)
+    });
   };
 
   const addAchievement = () => {
-    if (doctor) {
-      setDoctor({
-        ...doctor,
-        achievements: [...doctor.achievements, { en: '', ar: '' }]
-      });
-    }
+    setDoctor({
+      ...doctor,
+      achievements: [...(doctor.achievements || []), { en: '', ar: '' }]
+    });
   };
 
   const removeAchievement = (index: number) => {
-    if (doctor) {
-      setDoctor({
-        ...doctor,
-        achievements: doctor.achievements.filter((_, i) => i !== index)
-      });
-    }
+    setDoctor({
+      ...doctor,
+      achievements: doctor.achievements.filter((_, i) => i !== index)
+    });
   };
 
   const addService = () => {
-    if (services) {
-      setServices({
-        items: [...services.items, { icon: 'Stethoscope', title: '', title_ar: '', description: '', description_ar: '' }]
-      });
-    }
+    setServices({
+      items: [...(services.items || []), { icon: 'Stethoscope', title: '', title_ar: '', description: '', description_ar: '' }]
+    });
   };
 
   const removeService = (index: number) => {
-    if (services) {
-      setServices({
-        items: services.items.filter((_, i) => i !== index)
-      });
-    }
+    setServices({
+      items: services.items.filter((_, i) => i !== index)
+    });
   };
 
   const isLoading = loadingDoctor || loadingHero || loadingServices || loadingTheme;

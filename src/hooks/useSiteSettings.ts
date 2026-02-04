@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useDoctor } from '@/contexts/DoctorContext';
 
 export interface DoctorProfile {
   name: string;
@@ -46,35 +47,47 @@ export interface ServicesContent {
 }
 
 export function useSiteSettings<T>(key: string) {
+  const { doctorId } = useDoctor();
+  
   return useQuery({
-    queryKey: ['site-settings', key],
+    queryKey: ['site-settings', key, doctorId],
     queryFn: async () => {
+      if (!doctorId) return null;
+      
       const { data, error } = await supabase
         .from('site_settings')
         .select('value')
         .eq('key', key)
-        .single();
+        .eq('doctor_id', doctorId)
+        .maybeSingle();
       
       if (error) throw error;
       return data?.value as T;
     },
+    enabled: !!doctorId,
   });
 }
 
 export function useUpdateSiteSettings<T>() {
   const queryClient = useQueryClient();
+  const { doctorId } = useDoctor();
   
   return useMutation({
     mutationFn: async ({ key, value }: { key: string; value: T }) => {
+      if (!doctorId) throw new Error('No doctor context');
+      
+      // Use upsert to handle both insert and update
       const { error } = await supabase
         .from('site_settings')
-        .update({ value: value as any })
-        .eq('key', key);
+        .upsert(
+          { key, value: value as any, doctor_id: doctorId },
+          { onConflict: 'key,doctor_id' }
+        );
       
       if (error) throw error;
     },
     onSuccess: (_, { key }) => {
-      queryClient.invalidateQueries({ queryKey: ['site-settings', key] });
+      queryClient.invalidateQueries({ queryKey: ['site-settings', key, doctorId] });
     },
   });
 }
