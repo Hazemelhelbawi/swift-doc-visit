@@ -26,12 +26,30 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     const loadDoctor = async () => {
       try {
-        // Extract doctor slug from subdomain
+        // First, check if logged-in user is a doctor
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          // Check if this user has a doctor record
+          const { data: userDoctor, error: doctorError } = await supabase
+            .from('doctors')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('is_active', true)
+            .maybeSingle();
+
+          if (!doctorError && userDoctor) {
+            console.log('Found doctor for logged-in user:', userDoctor.slug);
+            setDoctor(userDoctor);
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        // If no logged-in doctor, check subdomain or query param (for public site visitors)
         const hostname = window.location.hostname;
         const parts = hostname.split('.');
         
-        // Check if we have a subdomain (e.g., ahmed.yourdomain.com)
-        // In development, we might use localhost or preview URLs
         let slug = 'default';
         
         // For production: extract subdomain
@@ -39,7 +57,7 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           slug = parts[0];
         }
         
-        // For preview/development, check URL params or use default
+        // For preview/development, check URL params
         const urlParams = new URLSearchParams(window.location.search);
         const doctorParam = urlParams.get('doctor');
         if (doctorParam) {
@@ -80,7 +98,17 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     };
 
+    // Listen for auth state changes to reload doctor context
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+        setIsLoading(true);
+        loadDoctor();
+      }
+    });
+
     loadDoctor();
+
+    return () => subscription.unsubscribe();
   }, []);
 
   return (
