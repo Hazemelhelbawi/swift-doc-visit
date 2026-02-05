@@ -6,11 +6,13 @@ import { Menu, X, Globe, User, LogOut, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useDoctorSlug } from '@/hooks/useDoctorSlug';
 
 export const Header = () => {
   const { t } = useTranslation();
   const { user, isAdmin, signOut } = useAuth();
   const { language, setLanguage, isRTL } = useLanguage();
+  const { buildPath } = useDoctorSlug();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -27,7 +29,7 @@ export const Header = () => {
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-lg border-b border-border">
       <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
+        <Link to={buildPath('/')} className="flex items-center gap-2">
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
             <span className="text-primary-foreground font-bold text-lg">+</span>
           </div>
@@ -39,7 +41,7 @@ export const Header = () => {
           {navLinks.map((link) => (
             <Link
               key={link.path}
-              to={link.path}
+              to={buildPath(link.path)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 isActive(link.path)
                   ? 'bg-primary/10 text-primary'
@@ -69,7 +71,7 @@ export const Header = () => {
                   <Button variant="ghost" size="sm">{t('nav.dashboard')}</Button>
                 </Link>
               )}
-              <Link to="/my-appointments">
+              <Link to={buildPath('/my-appointments')}>
                 <Button variant="ghost" size="sm">
                   <Calendar className="h-4 w-4 mr-2" />
                   {t('nav.myAppointments')}
@@ -81,10 +83,10 @@ export const Header = () => {
             </div>
           ) : (
             <div className="hidden md:flex items-center gap-2">
-              <Link to="/auth">
+              <Link to={buildPath('/auth')}>
                 <Button variant="ghost" size="sm">{t('nav.login')}</Button>
               </Link>
-              <Link to="/book">
+              <Link to={buildPath('/book')}>
                 <Button size="sm">{t('nav.book')}</Button>
               </Link>
             </div>
@@ -114,7 +116,7 @@ export const Header = () => {
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
-                  to={link.path}
+                  to={buildPath(link.path)}
                   onClick={() => setIsMenuOpen(false)}
                   className={`px-4 py-3 rounded-lg font-medium ${
                     isActive(link.path) ? 'bg-primary/10 text-primary' : 'text-foreground'
@@ -131,17 +133,17 @@ export const Header = () => {
                       <Button variant="outline" className="w-full">{t('nav.dashboard')}</Button>
                     </Link>
                   )}
-                  <Link to="/my-appointments" onClick={() => setIsMenuOpen(false)}>
+                  <Link to={buildPath('/my-appointments')} onClick={() => setIsMenuOpen(false)}>
                     <Button variant="outline" className="w-full">{t('nav.myAppointments')}</Button>
                   </Link>
                   <Button variant="ghost" onClick={signOut} className="w-full">{t('nav.logout')}</Button>
                 </>
               ) : (
                 <>
-                  <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                  <Link to={buildPath('/auth')} onClick={() => setIsMenuOpen(false)}>
                     <Button variant="outline" className="w-full">{t('nav.login')}</Button>
                   </Link>
-                  <Link to="/book" onClick={() => setIsMenuOpen(false)}>
+                  <Link to={buildPath('/book')} onClick={() => setIsMenuOpen(false)}>
                     <Button className="w-full">{t('nav.book')}</Button>
                   </Link>
                 </>

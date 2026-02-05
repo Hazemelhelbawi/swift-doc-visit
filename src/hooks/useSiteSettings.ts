@@ -51,7 +51,7 @@ export function useSiteSettings<T>(key: string) {
   
   return useQuery({
     queryKey: ['site-settings', key, doctorId],
-    queryFn: async () => {
+    queryFn: async (): Promise<T | null> => {
       if (!doctorId) return null;
       
       const { data, error } = await supabase
@@ -62,7 +62,7 @@ export function useSiteSettings<T>(key: string) {
         .maybeSingle();
       
       if (error) throw error;
-      return data?.value as T;
+      return (data?.value as T) ?? null;
     },
     enabled: !!doctorId,
   });
