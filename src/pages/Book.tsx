@@ -4,7 +4,7 @@ import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, User, Phone, FileText, CheckCircle, Building2, ArrowRight } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format, parseISO, isSameDay, addDays, eachDayOfInterval, isAfter, isBefore } from 'date-fns';
+import { format, parseISO, isSameDay, addDays } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,6 +21,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useDoctor } from '@/contexts/DoctorContext';
+import { useDoctorSlug } from '@/hooks/useDoctorSlug';
 import { Layout } from '@/components/layout/Layout';
 
 const bookingSchema = z.object({
@@ -36,6 +38,8 @@ const Book = () => {
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
   const { language } = useLanguage();
+  const { doctorId } = useDoctor();
+  const { buildPath } = useDoctorSlug();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
@@ -54,18 +58,24 @@ const Book = () => {
     },
   });
 
-  // Fetch clinics
+  // Fetch clinics filtered by doctor
   const { data: clinics, isLoading: clinicsLoading } = useQuery({
-    queryKey: ['clinics'],
+    queryKey: ['clinics', doctorId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('clinics')
         .select('*')
-        .eq('is_active', true)
-        .order('name');
+        .eq('is_active', true);
+      
+      if (doctorId) {
+        query = query.eq('doctor_id', doctorId);
+      }
+      
+      const { data, error } = await query.order('name');
       if (error) throw error;
       return data;
     },
+    enabled: !!doctorId,
   });
 
   // Fetch schedules using the new function that handles recurring schedules
@@ -165,6 +175,7 @@ const Book = () => {
         user_id: user.id,
         clinic_id: selectedClinic,
         schedule_id: selectedSchedule,
+        doctor_id: doctorId,
         patient_name: values.patient_name,
         patient_phone: values.patient_phone,
         notes: values.notes || null,
@@ -230,7 +241,7 @@ const Book = () => {
               <User className="h-10 w-10 text-primary" />
             </div>
             <h1 className="font-heading text-2xl font-bold mb-4">{t('booking.loginRequired')}</h1>
-            <Link to="/auth">
+            <Link to={buildPath('/auth')}>
               <Button size="lg" className="gap-2">
                 {t('nav.login')}
                 <ArrowRight className="h-4 w-4" />
@@ -299,7 +310,7 @@ const Book = () => {
                 <h2 className="font-heading text-2xl font-bold mb-3">{t('booking.success')}</h2>
                 <p className="text-muted-foreground mb-8">{t('booking.successMessage')}</p>
                 <div className="flex justify-center gap-4">
-                  <Link to="/my-appointments">
+                  <Link to={buildPath('/my-appointments')}>
                     <Button size="lg">{t('nav.myAppointments')}</Button>
                   </Link>
                   <Button variant="outline" size="lg" onClick={() => {

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout/Layout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useDoctorProfile, useHeroContent, useServicesContent } from '@/hooks/useSiteSettings';
+import { useDoctorSlug } from '@/hooks/useDoctorSlug';
 import { Loader2 } from 'lucide-react';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -17,6 +18,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 const Index = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
+  const { buildPath } = useDoctorSlug();
   const isArabic = language === 'ar';
 
   const { data: doctorProfile, isLoading: loadingDoctor } = useDoctorProfile();
@@ -92,13 +94,13 @@ const Index = () => {
               </p>
               
               <div className="flex flex-wrap gap-4">
-                <Link to="/book">
+                <Link to={buildPath('/book')}>
                   <Button size="lg" className="gap-2 shadow-lg shadow-primary/25">
                     {t('hero.cta')}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
-                <Link to="/about">
+                <Link to={buildPath('/about')}>
                   <Button size="lg" variant="outline">
                     {t('hero.ctaSecondary')}
                   </Button>
@@ -206,7 +208,7 @@ const Index = () => {
           </div>
 
           <div className="text-center mt-12">
-            <Link to="/services">
+            <Link to={buildPath('/services')}>
               <Button variant="outline" size="lg" className="gap-2">
                 {t('common.viewAll') || 'View All Services'}
                 <ArrowRight className="h-4 w-4" />
@@ -231,7 +233,7 @@ const Index = () => {
             <p className="text-primary-foreground/80">
               {t('cta.subtitle') || 'Book your appointment today and experience personalized healthcare that puts you first.'}
             </p>
-            <Link to="/book">
+            <Link to={buildPath('/book')}>
               <Button size="lg" variant="secondary" className="gap-2">
                 {t('hero.cta')}
                 <ArrowRight className="h-4 w-4" />
