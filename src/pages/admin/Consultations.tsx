@@ -10,6 +10,7 @@ import { MessageSquare, Phone, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import type { Database } from '@/integrations/supabase/types';
+import { useDoctor } from '@/contexts/DoctorContext';
 
 type ConsultationStatus = Database['public']['Enums']['consultation_status'];
 
@@ -25,17 +26,21 @@ interface Consultation {
 export default function AdminConsultations() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { doctorId } = useDoctor();
 
   const { data: consultations, isLoading } = useQuery({
-    queryKey: ['admin-consultations'],
+    queryKey: ['admin-consultations', doctorId],
     queryFn: async () => {
+      if (!doctorId) return [];
       const { data, error } = await supabase
         .from('consultation_requests')
         .select('*')
+        .eq('doctor_id', doctorId)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as Consultation[];
     },
+    enabled: !!doctorId,
   });
 
   const updateStatusMutation = useMutation({
@@ -47,7 +52,7 @@ export default function AdminConsultations() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-consultations'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-consultations', doctorId] });
       toast.success(t('admin.statusUpdated'));
     },
     onError: () => toast.error(t('admin.errorUpdating')),
@@ -62,7 +67,7 @@ export default function AdminConsultations() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-consultations'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-consultations', doctorId] });
       toast.success(t('admin.consultationDeleted'));
     },
     onError: () => toast.error(t('admin.errorDeleting')),
