@@ -9,6 +9,7 @@ import { ClipboardList, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useDoctor } from '@/contexts/DoctorContext';
 import type { Database } from '@/integrations/supabase/types';
 
 type AppointmentStatus = Database['public']['Enums']['appointment_status'];
@@ -32,17 +33,21 @@ export default function AdminAppointments() {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const queryClient = useQueryClient();
+  const { doctorId } = useDoctor();
 
   const { data: appointments, isLoading } = useQuery({
-    queryKey: ['admin-appointments'],
+    queryKey: ['admin-appointments', doctorId],
     queryFn: async () => {
+      if (!doctorId) return [];
       const { data, error } = await supabase
         .from('appointments')
         .select('*, schedules(date, start_time, end_time, clinics(name, name_ar))')
+        .eq('doctor_id', doctorId)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as Appointment[];
     },
+    enabled: !!doctorId,
   });
 
   const updateStatusMutation = useMutation({

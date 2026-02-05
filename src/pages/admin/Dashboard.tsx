@@ -8,18 +8,22 @@ import { Building2, Calendar, ClipboardList, MessageSquare, TrendingUp, Users, A
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Link } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
+import { useDoctor } from '@/contexts/DoctorContext';
 
 export default function AdminDashboard() {
   const { t } = useTranslation();
+  const { doctorId } = useDoctor();
 
   const { data: stats } = useQuery({
-    queryKey: ['admin-stats'],
+    queryKey: ['admin-stats', doctorId],
     queryFn: async () => {
+      if (!doctorId) return { totalClinics: 0, totalSchedules: 0, totalAppointments: 0, pendingAppointments: 0, totalConsultations: 0, newConsultations: 0 };
+      
       const [clinics, schedules, appointments, consultations] = await Promise.all([
-        supabase.from('clinics').select('id', { count: 'exact' }),
-        supabase.from('schedules').select('id', { count: 'exact' }),
-        supabase.from('appointments').select('id, status', { count: 'exact' }),
-        supabase.from('consultation_requests').select('id, status', { count: 'exact' }),
+        supabase.from('clinics').select('id', { count: 'exact' }).eq('doctor_id', doctorId),
+        supabase.from('schedules').select('id', { count: 'exact' }).eq('doctor_id', doctorId),
+        supabase.from('appointments').select('id, status', { count: 'exact' }).eq('doctor_id', doctorId),
+        supabase.from('consultation_requests').select('id, status', { count: 'exact' }).eq('doctor_id', doctorId),
       ]);
 
       const pendingAppointments = appointments.data?.filter(a => a.status === 'pending').length || 0;
@@ -34,30 +38,37 @@ export default function AdminDashboard() {
         newConsultations,
       };
     },
+    enabled: !!doctorId,
   });
 
   const { data: recentAppointments } = useQuery({
-    queryKey: ['recent-appointments'],
+    queryKey: ['recent-appointments', doctorId],
     queryFn: async () => {
+      if (!doctorId) return [];
       const { data } = await supabase
         .from('appointments')
         .select('*, clinics(name)')
+        .eq('doctor_id', doctorId)
         .order('created_at', { ascending: false })
         .limit(5);
       return data || [];
     },
+    enabled: !!doctorId,
   });
 
   const { data: recentConsultations } = useQuery({
-    queryKey: ['recent-consultations'],
+    queryKey: ['recent-consultations', doctorId],
     queryFn: async () => {
+      if (!doctorId) return [];
       const { data } = await supabase
         .from('consultation_requests')
         .select('*')
+        .eq('doctor_id', doctorId)
         .order('created_at', { ascending: false })
         .limit(5);
       return data || [];
     },
+    enabled: !!doctorId,
   });
 
   const statCards = [

@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ScheduleForm } from '@/components/admin/ScheduleForm';
 import { ScheduleCard } from '@/components/admin/ScheduleCard';
+import { useDoctor } from '@/contexts/DoctorContext';
 
 interface Schedule {
   id: string;
@@ -51,6 +52,7 @@ export default function AdminSchedules() {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const queryClient = useQueryClient();
+  const { doctorId } = useDoctor();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
   const [filterClinic, setFilterClinic] = useState<string>('all');
@@ -58,27 +60,33 @@ export default function AdminSchedules() {
   const [formData, setFormData] = useState(defaultFormData);
 
   const { data: clinics } = useQuery({
-    queryKey: ['admin-clinics-list'],
+    queryKey: ['admin-clinics-list', doctorId],
     queryFn: async () => {
+      if (!doctorId) return [];
       const { data, error } = await supabase
         .from('clinics')
         .select('id, name, name_ar')
+        .eq('doctor_id', doctorId)
         .eq('is_active', true);
       if (error) throw error;
       return data as Clinic[];
     },
+    enabled: !!doctorId,
   });
 
   const { data: schedules, isLoading } = useQuery({
-    queryKey: ['admin-schedules'],
+    queryKey: ['admin-schedules', doctorId],
     queryFn: async () => {
+      if (!doctorId) return [];
       const { data, error } = await supabase
         .from('schedules')
         .select('*, clinics(name, name_ar)')
+        .eq('doctor_id', doctorId)
         .order('date', { ascending: false });
       if (error) throw error;
       return data as Schedule[];
     },
+    enabled: !!doctorId,
   });
 
   const filteredSchedules = schedules?.filter(schedule => {
@@ -90,6 +98,7 @@ export default function AdminSchedules() {
 
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
+      if (!doctorId) throw new Error('No doctor context');
       const { error } = await supabase.from('schedules').insert({
         clinic_id: data.clinic_id,
         date: data.date,
@@ -101,11 +110,12 @@ export default function AdminSchedules() {
         recurrence_pattern: data.is_recurring ? data.recurrence_pattern : null,
         recurrence_days: data.is_recurring && data.recurrence_days.length > 0 ? data.recurrence_days : null,
         recurrence_end_date: data.is_recurring && data.recurrence_end_date ? data.recurrence_end_date : null,
+        doctor_id: doctorId,
       });
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-schedules'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-schedules', doctorId] });
       toast.success(t('admin.scheduleCreated'));
       resetForm();
     },
@@ -132,7 +142,7 @@ export default function AdminSchedules() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-schedules'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-schedules', doctorId] });
       toast.success(t('admin.scheduleUpdated'));
       resetForm();
     },
@@ -145,7 +155,7 @@ export default function AdminSchedules() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-schedules'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-schedules', doctorId] });
       toast.success(t('admin.scheduleDeleted'));
     },
     onError: () => toast.error(t('admin.errorDeleting')),

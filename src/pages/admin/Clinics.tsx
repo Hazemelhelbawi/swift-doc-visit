@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Plus, Pencil, Trash2, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useDoctor } from '@/contexts/DoctorContext';
 
 interface Clinic {
   id: string;
@@ -32,6 +33,7 @@ export default function AdminClinics() {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const queryClient = useQueryClient();
+  const { doctorId } = useDoctor();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClinic, setEditingClinic] = useState<Clinic | null>(null);
   const [formData, setFormData] = useState({
@@ -48,19 +50,23 @@ export default function AdminClinics() {
   });
 
   const { data: clinics, isLoading } = useQuery({
-    queryKey: ['admin-clinics'],
+    queryKey: ['admin-clinics', doctorId],
     queryFn: async () => {
+      if (!doctorId) return [];
       const { data, error } = await supabase
         .from('clinics')
         .select('*')
+        .eq('doctor_id', doctorId)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as Clinic[];
     },
+    enabled: !!doctorId,
   });
 
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
+      if (!doctorId) throw new Error('No doctor context');
       const { error } = await supabase.from('clinics').insert({
         name: data.name,
         name_ar: data.name_ar || null,
@@ -72,11 +78,12 @@ export default function AdminClinics() {
         doctor_name_ar: data.doctor_name_ar || null,
         doctor_specialty: data.doctor_specialty || null,
         doctor_specialty_ar: data.doctor_specialty_ar || null,
+        doctor_id: doctorId,
       });
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-clinics'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-clinics', doctorId] });
       toast.success(t('admin.clinicCreated'));
       resetForm();
     },
@@ -103,7 +110,7 @@ export default function AdminClinics() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-clinics'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-clinics', doctorId] });
       toast.success(t('admin.clinicUpdated'));
       resetForm();
     },
@@ -116,7 +123,7 @@ export default function AdminClinics() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-clinics'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-clinics', doctorId] });
       toast.success(t('admin.clinicDeleted'));
     },
     onError: () => toast.error(t('admin.errorDeleting')),
