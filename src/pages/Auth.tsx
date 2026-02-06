@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
@@ -16,6 +16,18 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, signIn, signUp, signInWithGoogle } = useAuth();
+  const [searchParams] = useSearchParams();
+  
+  const doctorSlug = searchParams.get('doctor');
+  const redirectParam = searchParams.get('redirect');
+  
+  // Build redirect path preserving doctor param
+  const getRedirectPath = () => {
+    const basePath = redirectParam || '/';
+    if (!doctorSlug) return basePath;
+    const separator = basePath.includes('?') ? '&' : '?';
+    return `${basePath}${separator}doctor=${doctorSlug}`;
+  };
   
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -27,7 +39,7 @@ const Auth = () => {
   });
 
   useEffect(() => {
-    if (user) navigate('/');
+    if (user) navigate(getRedirectPath());
   }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,7 +51,7 @@ const Auth = () => {
         const { error } = await signIn(formData.email, formData.password);
         if (error) throw error;
         toast({ title: t('auth.loginSuccess') });
-        navigate('/');
+        navigate(getRedirectPath());
       } else {
         const { error } = await signUp(formData.email, formData.password, formData.fullName);
         if (error) {
@@ -67,8 +79,9 @@ const Auth = () => {
   };
 
   const handleGoogleSignIn = async () => {
+    const redirectPath = getRedirectPath();
     const { error } = await lovable.auth.signInWithOAuth('google', {
-      redirect_uri: window.location.origin,
+      redirect_uri: `${window.location.origin}${redirectPath}`,
     });
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
