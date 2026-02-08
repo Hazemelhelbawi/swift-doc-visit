@@ -21,12 +21,20 @@ const Auth = () => {
   const doctorSlug = searchParams.get('doctor');
   const redirectParam = searchParams.get('redirect');
   
-  // Build redirect path preserving doctor param
+  // Persist doctor slug on mount so it survives redirects
+  useEffect(() => {
+    if (doctorSlug) {
+      sessionStorage.setItem('active_doctor_slug', doctorSlug);
+    }
+  }, [doctorSlug]);
+  
+  // Build redirect path preserving doctor param (from URL or sessionStorage)
   const getRedirectPath = () => {
     const basePath = redirectParam || '/';
-    if (!doctorSlug) return basePath;
+    const slug = doctorSlug || sessionStorage.getItem('active_doctor_slug');
+    if (!slug) return basePath;
     const separator = basePath.includes('?') ? '&' : '?';
-    return `${basePath}${separator}doctor=${doctorSlug}`;
+    return `${basePath}${separator}doctor=${slug}`;
   };
   
   const [isLogin, setIsLogin] = useState(true);
