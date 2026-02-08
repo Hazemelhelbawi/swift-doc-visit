@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useState, useCallback } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Globe, User, LogOut, Calendar } from 'lucide-react';
@@ -12,9 +12,22 @@ export const Header = () => {
   const { t } = useTranslation();
   const { user, isAdmin, signOut } = useAuth();
   const { language, setLanguage, isRTL } = useLanguage();
-  const { buildPath } = useDoctorSlug();
+  const { doctorSlug, buildPath } = useDoctorSlug();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleSignOut = useCallback(async () => {
+    // Capture slug before sign out clears session
+    const slug = doctorSlug || sessionStorage.getItem('active_doctor_slug');
+    await signOut();
+    // Redirect to doctor-scoped home page
+    if (slug) {
+      navigate(`/?doctor=${slug}`);
+    } else {
+      navigate('/');
+    }
+  }, [doctorSlug, signOut, navigate]);
 
   const navLinks = [
     { path: '/', label: t('nav.home') },
@@ -77,7 +90,7 @@ export const Header = () => {
                   {t('nav.myAppointments')}
                 </Button>
               </Link>
-              <Button variant="ghost" size="icon" onClick={signOut}>
+              <Button variant="ghost" size="icon" onClick={handleSignOut}>
                 <LogOut className="h-5 w-5" />
               </Button>
             </div>
@@ -136,7 +149,7 @@ export const Header = () => {
                   <Link to={buildPath('/my-appointments')} onClick={() => setIsMenuOpen(false)}>
                     <Button variant="outline" className="w-full">{t('nav.myAppointments')}</Button>
                   </Link>
-                  <Button variant="ghost" onClick={signOut} className="w-full">{t('nav.logout')}</Button>
+                  <Button variant="ghost" onClick={handleSignOut} className="w-full">{t('nav.logout')}</Button>
                 </>
               ) : (
                 <>
