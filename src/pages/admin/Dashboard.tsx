@@ -9,10 +9,12 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Link } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { useDoctor } from '@/contexts/DoctorContext';
+import { useSeedDoctorDefaults } from '@/hooks/useSeedDoctorDefaults';
 
 export default function AdminDashboard() {
   const { t } = useTranslation();
   const { doctorId } = useDoctor();
+  useSeedDoctorDefaults();
 
   const { data: stats } = useQuery({
     queryKey: ['admin-stats', doctorId],

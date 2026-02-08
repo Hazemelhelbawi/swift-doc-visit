@@ -374,6 +374,7 @@ export type Database = {
           start_time: string
         }[]
       }
+      get_doctor_id_for_user: { Args: { _user_id: string }; Returns: string }
       get_schedule_booking_count: {
         Args: { schedule_uuid: string }
         Returns: number
