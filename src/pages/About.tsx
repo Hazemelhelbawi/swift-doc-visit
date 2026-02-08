@@ -106,7 +106,7 @@ const About = () => {
             >
               <span className="text-primary font-medium">{t('about.subtitle')}</span>
               <h1 className="font-heading text-4xl md:text-5xl font-bold text-foreground">
-                {t('about.title')}
+                {isArabic ? `عن ${doctorName}` : `About ${doctorName}`}
               </h1>
               <p className="text-lg text-muted-foreground leading-relaxed">
                 {t('about.description')}
