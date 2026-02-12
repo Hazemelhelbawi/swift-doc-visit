@@ -1,22 +1,22 @@
-# Welcome to your Lovable project
+# Welcome to your Doctor project
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/81b9d66f-656c-42f7-8133-2cec8943feb6
+**URL**: https://swift-doc-visit.vercel.app/
 
 ## How can I edit this code?
 
 There are several ways of editing your application.
 
-**Use Lovable**
+**Use Doctor**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+Simply visit the [Doctor Project](https://swift-doc-visit.vercel.app/REPLACE_WITH_PROJECT_ID) and start prompting.
 
-Changes made via Lovable will be committed automatically to this repo.
+Changes made via Doctor will be committed automatically to this repo.
 
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Doctor.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
