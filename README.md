@@ -6,17 +6,11 @@
 
 ## How can I edit this code?
 
-There are several ways of editing your application.
-
-**Use Doctor**
-
-Simply visit the [Doctor Project](https://swift-doc-visit.vercel.app/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Doctor will be committed automatically to this repo.
+There are several ways of editing your application using standard tooling.
 
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Doctor.
+If you want to work locally using your own IDE, you can clone this repo and push changes to your Git remote.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -62,12 +56,14 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+You can deploy this project to any modern hosting provider that supports Node.js applications (for example, a static hosting platform or a custom server).
 
-## Can I connect a custom domain to my Lovable project?
+At a high level:
 
-Yes, you can!
+- Install dependencies with `npm install`
+- Build the production bundle with `npm run build`
+- Serve the contents of the `dist` folder using your hosting provider of choice
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Can I connect a custom domain to my deployed project?
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Yes, most hosting providers allow you to connect a custom domain. Refer to your provider’s documentation for the exact steps to point your domain at the deployed application.

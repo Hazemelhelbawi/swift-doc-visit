@@ -57,11 +57,7 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
         let slug = "default";
 
         // For production: extract subdomain
-        if (
-          parts.length >= 3 &&
-          !hostname.includes("localhost") &&
-          !hostname.includes("lovable.app")
-        ) {
+        if (parts.length >= 3 && !hostname.includes("localhost")) {
           slug = parts[0];
         }
 
