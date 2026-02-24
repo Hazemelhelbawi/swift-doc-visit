@@ -1,6 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useDoctor } from '@/contexts/DoctorContext';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useDoctor } from "@/contexts/DoctorContext";
+import type { Json } from "@/integrations/supabase/types";
 
 export interface DoctorProfile {
   name: string;
@@ -22,6 +23,14 @@ export interface DoctorProfile {
   achievements: Array<{ en: string; ar: string }>;
   philosophy: string;
   philosophy_ar: string;
+  description?: string;
+  description_ar?: string;
+  contact_phone?: string;
+  contact_email?: string;
+  contact_address?: string;
+  contact_address_ar?: string;
+  working_hours?: string;
+  working_hours_ar?: string;
 }
 
 export interface HeroContent {
@@ -48,19 +57,19 @@ export interface ServicesContent {
 
 export function useSiteSettings<T>(key: string) {
   const { doctorId } = useDoctor();
-  
+
   return useQuery({
-    queryKey: ['site-settings', key, doctorId],
+    queryKey: ["site-settings", key, doctorId],
     queryFn: async (): Promise<T | null> => {
       if (!doctorId) return null;
-      
+
       const { data, error } = await supabase
-        .from('site_settings')
-        .select('value')
-        .eq('key', key)
-        .eq('doctor_id', doctorId)
+        .from("site_settings")
+        .select("value")
+        .eq("key", key)
+        .eq("doctor_id", doctorId)
         .maybeSingle();
-      
+
       if (error) throw error;
       return (data?.value as T) ?? null;
     },
@@ -71,35 +80,39 @@ export function useSiteSettings<T>(key: string) {
 export function useUpdateSiteSettings<T>() {
   const queryClient = useQueryClient();
   const { doctorId } = useDoctor();
-  
+
   return useMutation({
     mutationFn: async ({ key, value }: { key: string; value: T }) => {
-      if (!doctorId) throw new Error('No doctor context');
-      
+      if (!doctorId) throw new Error("No doctor context");
+
       // Use upsert to handle both insert and update
+      // Supabase client accepts arbitrary JSON for `value`.
+      // Disable the explicit-any lint rule for this call.
       const { error } = await supabase
-        .from('site_settings')
+        .from("site_settings")
         .upsert(
-          { key, value: value as any, doctor_id: doctorId },
-          { onConflict: 'key,doctor_id' }
+          { key, value: value as unknown as Json, doctor_id: doctorId },
+          { onConflict: "key,doctor_id" },
         );
-      
+
       if (error) throw error;
     },
     onSuccess: (_, { key }) => {
-      queryClient.invalidateQueries({ queryKey: ['site-settings', key, doctorId] });
+      queryClient.invalidateQueries({
+        queryKey: ["site-settings", key, doctorId],
+      });
     },
   });
 }
 
 export function useDoctorProfile() {
-  return useSiteSettings<DoctorProfile>('doctor_profile');
+  return useSiteSettings<DoctorProfile>("doctor_profile");
 }
 
 export function useHeroContent() {
-  return useSiteSettings<HeroContent>('hero_content');
+  return useSiteSettings<HeroContent>("hero_content");
 }
 
 export function useServicesContent() {
-  return useSiteSettings<ServicesContent>('services');
+  return useSiteSettings<ServicesContent>("services");
 }

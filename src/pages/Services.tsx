@@ -1,60 +1,63 @@
-import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { 
-  Stethoscope, 
-  Activity, 
-  Pill, 
-  MessageSquare, 
-  FlaskConical, 
+import { useTranslation } from "react-i18next";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { useDoctorSlug } from "@/hooks/useDoctorSlug";
+import {
+  Stethoscope,
+  Activity,
+  Pill,
+  MessageSquare,
+  FlaskConical,
   CalendarCheck,
   ArrowRight,
-  Heart
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Layout } from '@/components/layout/Layout';
+  Heart,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Layout } from "@/components/layout/Layout";
 
 const Services = () => {
   const { t } = useTranslation();
 
   const services = [
-    { 
-      icon: Stethoscope, 
-      titleKey: 'generalCheckup', 
-      descKey: 'generalCheckupDesc',
-      color: 'primary'
+    {
+      icon: Stethoscope,
+      titleKey: "generalCheckup",
+      descKey: "generalCheckupDesc",
+      color: "primary",
     },
-    { 
-      icon: Activity, 
-      titleKey: 'chronicCare', 
-      descKey: 'chronicCareDesc',
-      color: 'accent'
+    {
+      icon: Activity,
+      titleKey: "chronicCare",
+      descKey: "chronicCareDesc",
+      color: "accent",
     },
-    { 
-      icon: Pill, 
-      titleKey: 'preventive', 
-      descKey: 'preventiveDesc',
-      color: 'primary'
+    {
+      icon: Pill,
+      titleKey: "preventive",
+      descKey: "preventiveDesc",
+      color: "primary",
     },
-    { 
-      icon: MessageSquare, 
-      titleKey: 'consultation', 
-      descKey: 'consultationDesc',
-      color: 'accent'
+    {
+      icon: MessageSquare,
+      titleKey: "consultation",
+      descKey: "consultationDesc",
+      color: "accent",
     },
-    { 
-      icon: FlaskConical, 
-      titleKey: 'labTests', 
-      descKey: 'labTestsDesc',
-      color: 'primary'
+    {
+      icon: FlaskConical,
+      titleKey: "labTests",
+      descKey: "labTestsDesc",
+      color: "primary",
     },
-    { 
-      icon: CalendarCheck, 
-      titleKey: 'followUp', 
-      descKey: 'followUpDesc',
-      color: 'accent'
+    {
+      icon: CalendarCheck,
+      titleKey: "followUp",
+      descKey: "followUpDesc",
+      color: "accent",
     },
   ];
+
+  const { buildPath } = useDoctorSlug();
 
   return (
     <Layout>
@@ -67,12 +70,14 @@ const Services = () => {
             transition={{ duration: 0.6 }}
             className="text-center max-w-3xl mx-auto"
           >
-            <span className="text-primary font-medium">{t('services.subtitle')}</span>
+            <span className="text-primary font-medium">
+              {t("services.subtitle")}
+            </span>
             <h1 className="font-heading text-4xl md:text-5xl font-bold mt-2 mb-6">
-              {t('services.title')}
+              {t("services.title")}
             </h1>
             <p className="text-lg text-muted-foreground">
-              {t('services.description')}
+              {t("services.description")}
             </p>
           </motion.div>
         </div>
@@ -91,8 +96,12 @@ const Services = () => {
                 transition={{ delay: i * 0.1 }}
                 className="group bg-card rounded-2xl p-8 border border-border hover:border-primary/30 hover:shadow-xl transition-all duration-300"
               >
-                <div className={`w-16 h-16 rounded-2xl ${service.color === 'primary' ? 'bg-primary/10 group-hover:bg-primary' : 'bg-accent/10 group-hover:bg-accent'} flex items-center justify-center mb-6 transition-colors`}>
-                  <service.icon className={`h-8 w-8 ${service.color === 'primary' ? 'text-primary group-hover:text-primary-foreground' : 'text-accent group-hover:text-accent-foreground'} transition-colors`} />
+                <div
+                  className={`w-16 h-16 rounded-2xl ${service.color === "primary" ? "bg-primary/10 group-hover:bg-primary" : "bg-accent/10 group-hover:bg-accent"} flex items-center justify-center mb-6 transition-colors`}
+                >
+                  <service.icon
+                    className={`h-8 w-8 ${service.color === "primary" ? "text-primary group-hover:text-primary-foreground" : "text-accent group-hover:text-accent-foreground"} transition-colors`}
+                  />
                 </div>
                 <h3 className="font-heading text-xl font-semibold mb-3">
                   {t(`services.${service.titleKey}`)}
@@ -100,7 +109,10 @@ const Services = () => {
                 <p className="text-muted-foreground mb-6">
                   {t(`services.${service.descKey}`)}
                 </p>
-                <Link to="/book" className="inline-flex items-center text-primary font-medium hover:gap-2 transition-all">
+                <Link
+                  to={buildPath("/book")}
+                  className="inline-flex items-center text-primary font-medium hover:gap-2 transition-all"
+                >
                   Book Now <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
               </motion.div>
@@ -123,11 +135,11 @@ const Services = () => {
               </h2>
               <div className="space-y-4">
                 {[
-                  'Personalized treatment plans tailored to your needs',
-                  'State-of-the-art diagnostic equipment',
-                  'Compassionate and experienced medical team',
-                  'Convenient online booking and follow-up',
-                  'Comprehensive health records management',
+                  "Personalized treatment plans tailored to your needs",
+                  "State-of-the-art diagnostic equipment",
+                  "Compassionate and experienced medical team",
+                  "Convenient online booking and follow-up",
+                  "Comprehensive health records management",
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-3">
                     <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -149,9 +161,10 @@ const Services = () => {
                 Ready to Get Started?
               </h3>
               <p className="text-primary-foreground/80 mb-6">
-                Book your appointment today and take the first step towards better health.
+                Book your appointment today and take the first step towards
+                better health.
               </p>
-              <Link to="/book">
+              <Link to={buildPath("/book")}>
                 <Button variant="secondary" size="lg" className="gap-2">
                   Book Appointment
                   <ArrowRight className="h-4 w-4" />

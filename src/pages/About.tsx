@@ -1,50 +1,75 @@
-import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
-import { GraduationCap, Award, Heart, Stethoscope, CheckCircle, Loader2 } from 'lucide-react';
-import { Layout } from '@/components/layout/Layout';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useDoctorProfile } from '@/hooks/useSiteSettings';
+import { useTranslation } from "react-i18next";
+import { motion } from "framer-motion";
+import {
+  GraduationCap,
+  Award,
+  Heart,
+  Stethoscope,
+  CheckCircle,
+  Loader2,
+} from "lucide-react";
+import { Layout } from "@/components/layout/Layout";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useDoctorProfile } from "@/hooks/useSiteSettings";
 
 const About = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
-  const isArabic = language === 'ar';
+  const isArabic = language === "ar";
 
   const { data: doctorProfile, isLoading } = useDoctorProfile();
 
   // Use data from settings or fallback
-  const doctorName = isArabic ? doctorProfile?.name_ar : doctorProfile?.name || 'Dr. Sarah Mitchell';
-  const specialty = isArabic ? doctorProfile?.specialty_ar : doctorProfile?.specialty || 'Internal Medicine Specialist';
-  const philosophy = isArabic ? doctorProfile?.philosophy_ar : doctorProfile?.philosophy || t('about.philosophyText');
+  const doctorName = isArabic
+    ? doctorProfile?.name_ar
+    : doctorProfile?.name || "Dr. Sarah Mitchell";
+  const specialty = isArabic
+    ? doctorProfile?.specialty_ar
+    : doctorProfile?.specialty || "Internal Medicine Specialist";
+  const philosophy = isArabic
+    ? doctorProfile?.philosophy_ar
+    : doctorProfile?.philosophy || t("about.philosophyText");
 
-  const education = doctorProfile?.education?.map(edu => ({
+  const education = doctorProfile?.education?.map((edu) => ({
     degree: isArabic ? edu.degree_ar : edu.degree,
     institution: isArabic ? edu.institution_ar : edu.institution,
     year: edu.year,
   })) || [
-    { degree: 'M.D. in Internal Medicine', institution: 'Johns Hopkins University', year: '2008' },
-    { degree: 'Residency in Internal Medicine', institution: 'Mayo Clinic', year: '2011' },
-    { degree: 'Fellowship in Cardiology', institution: 'Cleveland Clinic', year: '2014' },
+    {
+      degree: "M.D. in Internal Medicine",
+      institution: "Johns Hopkins University",
+      year: "2008",
+    },
+    {
+      degree: "Residency in Internal Medicine",
+      institution: "Mayo Clinic",
+      year: "2011",
+    },
+    {
+      degree: "Fellowship in Cardiology",
+      institution: "Cleveland Clinic",
+      year: "2014",
+    },
   ];
 
-  const specializations = doctorProfile?.specializations?.map(spec => 
-    isArabic ? spec.ar : spec.en
+  const specializations = doctorProfile?.specializations?.map((spec) =>
+    isArabic ? spec.ar : spec.en,
   ) || [
-    'General Internal Medicine',
-    'Cardiovascular Health',
-    'Diabetes Management',
-    'Hypertension Treatment',
-    'Preventive Medicine',
-    'Geriatric Care',
+    "General Internal Medicine",
+    "Cardiovascular Health",
+    "Diabetes Management",
+    "Hypertension Treatment",
+    "Preventive Medicine",
+    "Geriatric Care",
   ];
 
-  const achievements = doctorProfile?.achievements?.map(ach => 
-    isArabic ? ach.ar : ach.en
+  const achievements = doctorProfile?.achievements?.map((ach) =>
+    isArabic ? ach.ar : ach.en,
   ) || [
-    'Board Certified in Internal Medicine',
-    'Fellow of the American College of Physicians',
-    'Top Doctor Award 2020-2024',
-    'Published researcher with 20+ papers',
+    "Board Certified in Internal Medicine",
+    "Fellow of the American College of Physicians",
+    "Top Doctor Award 2020-2024",
+    "Published researcher with 20+ papers",
   ];
 
   if (isLoading) {
@@ -72,7 +97,7 @@ const About = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 rounded-3xl rotate-3" />
                 <div className="relative bg-card rounded-3xl shadow-2xl overflow-hidden">
                   {doctorProfile?.image_url ? (
-                    <img 
+                    <img
                       src={doctorProfile.image_url}
                       alt={doctorName}
                       className="w-full aspect-square object-cover"
@@ -83,14 +108,18 @@ const About = () => {
                         <Stethoscope className="h-24 w-24 text-primary" />
                       </div>
                       <div className="text-center">
-                        <h2 className="font-heading text-2xl font-bold">{doctorName}</h2>
+                        <h2 className="font-heading text-2xl font-bold">
+                          {doctorName}
+                        </h2>
                         <p className="text-muted-foreground">{specialty}</p>
                       </div>
                     </div>
                   )}
                   {doctorProfile?.image_url && (
                     <div className="p-4 text-center bg-card">
-                      <h2 className="font-heading text-2xl font-bold">{doctorName}</h2>
+                      <h2 className="font-heading text-2xl font-bold">
+                        {doctorName}
+                      </h2>
                       <p className="text-muted-foreground">{specialty}</p>
                     </div>
                   )}
@@ -104,12 +133,16 @@ const About = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="space-y-6"
             >
-              <span className="text-primary font-medium">{t('about.subtitle')}</span>
+              <span className="text-primary font-medium">
+                {t("about.subtitle")}
+              </span>
               <h1 className="font-heading text-4xl md:text-5xl font-bold text-foreground">
                 {isArabic ? `عن ${doctorName}` : `About ${doctorName}`}
               </h1>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                {t('about.description')}
+                {isArabic
+                  ? doctorProfile?.description_ar || t("about.description")
+                  : doctorProfile?.description || t("about.description")}
               </p>
             </motion.div>
           </div>
@@ -128,7 +161,9 @@ const About = () => {
             <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
               <GraduationCap className="h-8 w-8 text-primary" />
             </div>
-            <h2 className="font-heading text-3xl font-bold">{t('about.education')}</h2>
+            <h2 className="font-heading text-3xl font-bold">
+              {t("about.education")}
+            </h2>
           </motion.div>
 
           <div className="max-w-3xl mx-auto space-y-4">
@@ -145,8 +180,12 @@ const About = () => {
                   <GraduationCap className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-foreground">{edu.degree}</h3>
-                  <p className="text-muted-foreground text-sm">{edu.institution}</p>
+                  <h3 className="font-semibold text-foreground">
+                    {edu.degree}
+                  </h3>
+                  <p className="text-muted-foreground text-sm">
+                    {edu.institution}
+                  </p>
                 </div>
                 <span className="text-primary font-medium">{edu.year}</span>
               </motion.div>
@@ -168,11 +207,16 @@ const About = () => {
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
                   <Stethoscope className="h-6 w-6 text-primary" />
                 </div>
-                <h2 className="font-heading text-2xl font-bold">{t('about.specializations')}</h2>
+                <h2 className="font-heading text-2xl font-bold">
+                  {t("about.specializations")}
+                </h2>
               </div>
               <div className="space-y-3">
                 {specializations.map((spec, i) => (
-                  <div key={i} className="flex items-center gap-3 p-4 bg-card rounded-xl border border-border">
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 p-4 bg-card rounded-xl border border-border"
+                  >
                     <CheckCircle className="h-5 w-5 text-primary" />
                     <span>{spec}</span>
                   </div>
@@ -190,11 +234,16 @@ const About = () => {
                 <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
                   <Award className="h-6 w-6 text-accent" />
                 </div>
-                <h2 className="font-heading text-2xl font-bold">{t('about.achievements') || 'Achievements'}</h2>
+                <h2 className="font-heading text-2xl font-bold">
+                  {t("about.achievements") || "Achievements"}
+                </h2>
               </div>
               <div className="space-y-3">
                 {achievements.map((achievement, i) => (
-                  <div key={i} className="flex items-center gap-3 p-4 bg-card rounded-xl border border-border">
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 p-4 bg-card rounded-xl border border-border"
+                  >
                     <Award className="h-5 w-5 text-accent" />
                     <span>{achievement}</span>
                   </div>
@@ -217,7 +266,9 @@ const About = () => {
             <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-primary/10 flex items-center justify-center">
               <Heart className="h-8 w-8 text-primary" />
             </div>
-            <h2 className="font-heading text-3xl font-bold mb-6">{t('about.philosophy')}</h2>
+            <h2 className="font-heading text-3xl font-bold mb-6">
+              {t("about.philosophy")}
+            </h2>
             <p className="text-xl text-muted-foreground leading-relaxed">
               "{philosophy}"
             </p>

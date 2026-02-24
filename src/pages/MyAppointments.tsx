@@ -1,17 +1,29 @@
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Calendar, Clock, MapPin, Phone, FileText, CalendarPlus, Building2, Edit2, X, Loader2 } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format, parseISO, isAfter } from 'date-fns';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import { useDoctorSlug } from "@/hooks/useDoctorSlug";
+import { motion } from "framer-motion";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Phone,
+  FileText,
+  CalendarPlus,
+  Building2,
+  Edit2,
+  X,
+  Loader2,
+} from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format, parseISO, isAfter } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +31,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,18 +41,18 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { useAuth } from '@/contexts/AuthContext';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { Layout } from '@/components/layout/Layout';
-import { toast } from 'sonner';
+} from "@/components/ui/alert-dialog";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Layout } from "@/components/layout/Layout";
+import { toast } from "sonner";
 
 interface Appointment {
   id: string;
   patient_name: string;
   patient_phone: string;
   notes: string | null;
-  status: 'pending' | 'confirmed' | 'cancelled';
+  status: "pending" | "confirmed" | "cancelled";
   created_at: string;
   clinic: {
     id: string;
@@ -63,23 +75,31 @@ const MyAppointments = () => {
   const { language } = useLanguage();
   const queryClient = useQueryClient();
 
-  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
-  const [cancellingAppointment, setCancellingAppointment] = useState<Appointment | null>(null);
-  const [editForm, setEditForm] = useState({ patient_name: '', patient_phone: '', notes: '' });
+  const [editingAppointment, setEditingAppointment] =
+    useState<Appointment | null>(null);
+  const [cancellingAppointment, setCancellingAppointment] =
+    useState<Appointment | null>(null);
+  const [editForm, setEditForm] = useState({
+    patient_name: "",
+    patient_phone: "",
+    notes: "",
+  });
 
   const { data: appointments, isLoading } = useQuery({
-    queryKey: ['myAppointments', user?.id],
+    queryKey: ["myAppointments", user?.id],
     queryFn: async () => {
       if (!user) return [];
       const { data, error } = await supabase
-        .from('appointments')
-        .select(`
+        .from("appointments")
+        .select(
+          `
           *,
           clinic:clinics(*),
           schedule:schedules(*)
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        `,
+        )
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Appointment[];
     },
@@ -87,58 +107,63 @@ const MyAppointments = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: { id: string; patient_name: string; patient_phone: string; notes: string | null }) => {
+    mutationFn: async (data: {
+      id: string;
+      patient_name: string;
+      patient_phone: string;
+      notes: string | null;
+    }) => {
       const { error } = await supabase
-        .from('appointments')
+        .from("appointments")
         .update({
           patient_name: data.patient_name,
           patient_phone: data.patient_phone,
           notes: data.notes,
         })
-        .eq('id', data.id);
+        .eq("id", data.id);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myAppointments'] });
+      queryClient.invalidateQueries({ queryKey: ["myAppointments"] });
       setEditingAppointment(null);
-      toast.success(t('myAppointments.updateSuccess'));
+      toast.success(t("myAppointments.updateSuccess"));
     },
     onError: () => {
-      toast.error(t('myAppointments.updateError'));
+      toast.error(t("myAppointments.updateError"));
     },
   });
 
   const cancelMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('appointments')
-        .update({ status: 'cancelled' })
-        .eq('id', id);
+        .from("appointments")
+        .update({ status: "cancelled" })
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myAppointments'] });
+      queryClient.invalidateQueries({ queryKey: ["myAppointments"] });
       setCancellingAppointment(null);
-      toast.success(t('myAppointments.cancelSuccess'));
+      toast.success(t("myAppointments.cancelSuccess"));
     },
     onError: () => {
-      toast.error(t('myAppointments.cancelError'));
+      toast.error(t("myAppointments.cancelError"));
     },
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'confirmed':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+      case "confirmed":
+        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+      case "cancelled":
+        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
       default:
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
     }
   };
 
   const canModify = (appointment: Appointment) => {
-    if (appointment.status === 'cancelled') return false;
+    if (appointment.status === "cancelled") return false;
     if (!appointment.schedule?.date) return false;
     const appointmentDate = parseISO(appointment.schedule.date);
     return isAfter(appointmentDate, new Date());
@@ -148,7 +173,7 @@ const MyAppointments = () => {
     setEditForm({
       patient_name: appointment.patient_name,
       patient_phone: appointment.patient_phone,
-      notes: appointment.notes || '',
+      notes: appointment.notes || "",
     });
     setEditingAppointment(appointment);
   };
@@ -167,14 +192,18 @@ const MyAppointments = () => {
     return (
       <Layout>
         <div className="container py-20 text-center">
-          <h1 className="font-heading text-2xl font-bold mb-4">{t('booking.loginRequired')}</h1>
-          <Link to="/auth">
-            <Button>{t('nav.login')}</Button>
+          <h1 className="font-heading text-2xl font-bold mb-4">
+            {t("booking.loginRequired")}
+          </h1>
+          <Link to={buildPath("/auth")}>
+            <Button>{t("nav.login")}</Button>
           </Link>
         </div>
       </Layout>
     );
   }
+
+  const { buildPath } = useDoctorSlug();
 
   return (
     <Layout>
@@ -185,13 +214,17 @@ const MyAppointments = () => {
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <h1 className="font-heading text-3xl font-bold">{t('myAppointments.title')}</h1>
-            <p className="text-muted-foreground mt-2">{t('myAppointments.subtitle')}</p>
+            <h1 className="font-heading text-3xl font-bold">
+              {t("myAppointments.title")}
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              {t("myAppointments.subtitle")}
+            </p>
           </motion.div>
 
           {isLoading ? (
             <div className="space-y-4">
-              {[1, 2, 3].map(i => (
+              {[1, 2, 3].map((i) => (
                 <Skeleton key={i} className="h-32 w-full" />
               ))}
             </div>
@@ -213,18 +246,32 @@ const MyAppointments = () => {
                           {t(`status.${appointment.status}`)}
                         </Badge>
                         <span className="text-sm text-muted-foreground">
-                          {t('myAppointments.bookedOn')} {format(parseISO(appointment.created_at), 'MMM d, yyyy')}
+                          {t("myAppointments.bookedOn")}{" "}
+                          {format(
+                            parseISO(appointment.created_at),
+                            "MMM d, yyyy",
+                          )}
                         </span>
                       </div>
                       {canModify(appointment) && (
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={() => handleEdit(appointment)}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(appointment)}
+                          >
                             <Edit2 className="h-4 w-4 mr-1" />
-                            {t('myAppointments.edit')}
+                            {t("myAppointments.edit")}
                           </Button>
-                          <Button size="sm" variant="destructive" onClick={() => setCancellingAppointment(appointment)}>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() =>
+                              setCancellingAppointment(appointment)
+                            }
+                          >
                             <X className="h-4 w-4 mr-1" />
-                            {t('myAppointments.cancel')}
+                            {t("myAppointments.cancel")}
                           </Button>
                         </div>
                       )}
@@ -235,19 +282,29 @@ const MyAppointments = () => {
                       <div className="flex items-center gap-2 text-sm">
                         <Building2 className="h-4 w-4 text-primary flex-shrink-0" />
                         <span>
-                          {language === 'ar' && appointment.clinic?.name_ar 
-                            ? appointment.clinic.name_ar 
+                          {language === "ar" && appointment.clinic?.name_ar
+                            ? appointment.clinic.name_ar
                             : appointment.clinic?.name}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <Calendar className="h-4 w-4 text-primary flex-shrink-0" />
-                        <span>{appointment.schedule?.date && format(parseISO(appointment.schedule.date), 'EEEE, MMM d, yyyy')}</span>
+                        <span>
+                          {appointment.schedule?.date &&
+                            format(
+                              parseISO(appointment.schedule.date),
+                              "EEEE, MMM d, yyyy",
+                            )}
+                        </span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm" dir="ltr">
+                      <div
+                        className="flex items-center gap-2 text-sm"
+                        dir="ltr"
+                      >
                         <Clock className="h-4 w-4 text-primary flex-shrink-0" />
                         <span>
-                          {appointment.schedule?.start_time?.slice(0, 5)} - {appointment.schedule?.end_time?.slice(0, 5)}
+                          {appointment.schedule?.start_time?.slice(0, 5)} -{" "}
+                          {appointment.schedule?.end_time?.slice(0, 5)}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
@@ -262,8 +319,8 @@ const MyAppointments = () => {
                         <div className="flex items-start gap-2">
                           <MapPin className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                           <span>
-                            {language === 'ar' && appointment.clinic.address_ar 
-                              ? appointment.clinic.address_ar 
+                            {language === "ar" && appointment.clinic.address_ar
+                              ? appointment.clinic.address_ar
                               : appointment.clinic.address}
                           </span>
                         </div>
@@ -271,7 +328,9 @@ const MyAppointments = () => {
                       {appointment.notes && (
                         <div className="flex items-start gap-2">
                           <FileText className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                          <span className="line-clamp-2">{appointment.notes}</span>
+                          <span className="line-clamp-2">
+                            {appointment.notes}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -287,10 +346,10 @@ const MyAppointments = () => {
             >
               <CalendarPlus className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
               <h3 className="text-xl font-medium text-muted-foreground mb-2">
-                {t('myAppointments.noAppointments')}
+                {t("myAppointments.noAppointments")}
               </h3>
-              <Link to="/book">
-                <Button className="mt-4">{t('myAppointments.bookNow')}</Button>
+              <Link to={buildPath("/book")}>
+                <Button className="mt-4">{t("myAppointments.bookNow")}</Button>
               </Link>
             </motion.div>
           )}
@@ -298,67 +357,98 @@ const MyAppointments = () => {
       </section>
 
       {/* Edit Dialog */}
-      <Dialog open={!!editingAppointment} onOpenChange={() => setEditingAppointment(null)}>
+      <Dialog
+        open={!!editingAppointment}
+        onOpenChange={() => setEditingAppointment(null)}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{t('myAppointments.editAppointment')}</DialogTitle>
-            <DialogDescription>{t('myAppointments.editDescription')}</DialogDescription>
+            <DialogTitle>{t("myAppointments.editAppointment")}</DialogTitle>
+            <DialogDescription>
+              {t("myAppointments.editDescription")}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="patient_name">{t('booking.patientName')}</Label>
+              <Label htmlFor="patient_name">{t("booking.patientName")}</Label>
               <Input
                 id="patient_name"
                 value={editForm.patient_name}
-                onChange={(e) => setEditForm({ ...editForm, patient_name: e.target.value })}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, patient_name: e.target.value })
+                }
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="patient_phone">{t('booking.patientPhone')}</Label>
+              <Label htmlFor="patient_phone">{t("booking.patientPhone")}</Label>
               <Input
                 id="patient_phone"
                 value={editForm.patient_phone}
-                onChange={(e) => setEditForm({ ...editForm, patient_phone: e.target.value })}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, patient_phone: e.target.value })
+                }
                 dir="ltr"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="notes">{t('booking.notes')}</Label>
+              <Label htmlFor="notes">{t("booking.notes")}</Label>
               <Textarea
                 id="notes"
                 value={editForm.notes}
-                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, notes: e.target.value })
+                }
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingAppointment(null)}>
-              {t('common.cancel')}
+            <Button
+              variant="outline"
+              onClick={() => setEditingAppointment(null)}
+            >
+              {t("common.cancel")}
             </Button>
-            <Button onClick={handleSaveEdit} disabled={updateMutation.isPending}>
-              {updateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {t('common.save')}
+            <Button
+              onClick={handleSaveEdit}
+              disabled={updateMutation.isPending}
+            >
+              {updateMutation.isPending && (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              )}
+              {t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Cancel Confirmation Dialog */}
-      <AlertDialog open={!!cancellingAppointment} onOpenChange={() => setCancellingAppointment(null)}>
+      <AlertDialog
+        open={!!cancellingAppointment}
+        onOpenChange={() => setCancellingAppointment(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('myAppointments.confirmCancel')}</AlertDialogTitle>
-            <AlertDialogDescription>{t('myAppointments.confirmCancelDescription')}</AlertDialogDescription>
+            <AlertDialogTitle>
+              {t("myAppointments.confirmCancel")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("myAppointments.confirmCancelDescription")}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.no')}</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.no")}</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => cancellingAppointment && cancelMutation.mutate(cancellingAppointment.id)}
+              onClick={() =>
+                cancellingAppointment &&
+                cancelMutation.mutate(cancellingAppointment.id)
+              }
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {cancelMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {t('common.yes')}
+              {cancelMutation.isPending && (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              )}
+              {t("common.yes")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

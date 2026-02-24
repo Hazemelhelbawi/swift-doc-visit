@@ -8,22 +8,28 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Layout } from '@/components/layout/Layout';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useDoctor } from '@/contexts/DoctorContext';
 
 const Clinics = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
 
+  const { doctor, doctorId, isLoading: isDoctorLoading } = useDoctor();
+
   const { data: clinics, isLoading } = useQuery({
-    queryKey: ['clinics'],
+    queryKey: ['clinics', doctorId],
     queryFn: async () => {
+      if (!doctorId) return [];
       const { data, error } = await supabase
         .from('clinics')
         .select('*')
         .eq('is_active', true)
+        .eq('doctor_id', doctorId)
         .order('name');
       if (error) throw error;
       return data;
     },
+    enabled: !!doctorId,
   });
 
   return (
@@ -100,7 +106,7 @@ const Clinics = () => {
                       </div>
                     </div>
 
-                    <Link to={`/book?clinic=${clinic.id}`}>
+                    <Link to={`/book?clinic=${clinic.id}${doctor?.slug ? `&doctor=${doctor.slug}` : ''}`}>
                       <Button className="w-full gap-2">
                         {t('clinics.viewSchedule')}
                         <ArrowRight className="h-4 w-4" />
