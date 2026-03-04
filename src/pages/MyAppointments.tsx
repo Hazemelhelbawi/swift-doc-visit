@@ -188,6 +188,8 @@ const MyAppointments = () => {
     });
   };
 
+  const { buildPath } = useDoctorSlug();
+
   if (!user) {
     return (
       <Layout>
@@ -202,8 +204,6 @@ const MyAppointments = () => {
       </Layout>
     );
   }
-
-  const { buildPath } = useDoctorSlug();
 
   return (
     <Layout>
