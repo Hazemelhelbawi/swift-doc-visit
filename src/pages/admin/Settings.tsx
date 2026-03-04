@@ -18,6 +18,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 import {
   Card,
   CardContent,
@@ -511,12 +512,12 @@ export default function AdminSettings() {
                     </div>
                     <div className="space-y-2">
                       <Label>{t("admin.imageUrl")}</Label>
-                      <Input
-                        value={doctor.image_url || ""}
-                        onChange={(e) =>
-                          setDoctor({ ...doctor, image_url: e.target.value })
+                      <ImageUpload
+                        value={doctor.image_url}
+                        onChange={(url) =>
+                          setDoctor({ ...doctor, image_url: url })
                         }
-                        placeholder="https://..."
+                        folder="profiles"
                       />
                     </div>
                   </CardContent>
@@ -973,12 +974,12 @@ export default function AdminSettings() {
                   </div>
                   <div className="space-y-2 sm:col-span-2">
                     <Label>{t("admin.heroImage")}</Label>
-                    <Input
-                      value={hero.image_url || ""}
-                      onChange={(e) =>
-                        setHero({ ...hero, image_url: e.target.value })
+                    <ImageUpload
+                      value={hero.image_url}
+                      onChange={(url) =>
+                        setHero({ ...hero, image_url: url })
                       }
-                      placeholder="https://..."
+                      folder="hero"
                     />
                   </div>
                 </CardContent>
