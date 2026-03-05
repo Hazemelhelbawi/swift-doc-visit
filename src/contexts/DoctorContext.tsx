@@ -48,7 +48,8 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const hostname = window.location.hostname;
     const parts = hostname.split(".");
-    if (parts.length >= 3 && !hostname.includes("localhost")) {
+    const isPreviewOrLocal = hostname.includes("localhost") || hostname.includes("lovable") || hostname.includes("lovableproject");
+    if (parts.length >= 3 && !isPreviewOrLocal) {
       return parts[0];
     }
 
