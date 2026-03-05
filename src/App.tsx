@@ -75,13 +75,13 @@ const App = () => (
                   <Route path="/admin/consultations" element={<AdminConsultations />} />
                   <Route path="/admin/settings" element={<AdminSettings />} />
                   
-                  <Route path="*" element={<NotFound />} />
+                <Route path="*" element={<NotFound />} />
                 </Routes>
-              </BrowserRouter>
-            </TooltipProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </DoctorProvider>
+              </TooltipProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </DoctorProvider>
+      </BrowserRouter>
     </LanguageProvider>
   </QueryClientProvider>
 );
