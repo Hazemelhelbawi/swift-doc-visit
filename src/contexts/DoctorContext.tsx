@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Doctor {
@@ -18,23 +19,53 @@ interface DoctorContextType {
 
 const DoctorContext = createContext<DoctorContextType | undefined>(undefined);
 
+const DOCTOR_SLUG_KEY = "active_doctor_slug";
+
 export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+
+  // Get slug from URL param reactively
+  const doctorParam = searchParams.get("doctor");
+
+  // Persist slug in sessionStorage
+  useEffect(() => {
+    if (doctorParam) {
+      sessionStorage.setItem(DOCTOR_SLUG_KEY, doctorParam);
+    }
+  }, [doctorParam]);
+
+  // Resolve the effective slug: URL param > sessionStorage > subdomain > default
+  const resolveSlug = (): string => {
+    if (doctorParam) return doctorParam;
+
+    const stored = sessionStorage.getItem(DOCTOR_SLUG_KEY);
+    if (stored) return stored;
+
+    const hostname = window.location.hostname;
+    const parts = hostname.split(".");
+    if (parts.length >= 3 && !hostname.includes("localhost")) {
+      return parts[0];
+    }
+
+    return "default";
+  };
 
   useEffect(() => {
     const loadDoctor = async () => {
       try {
+        setIsLoading(true);
+
         // First, check if logged-in user is a doctor
         const {
           data: { user },
         } = await supabase.auth.getUser();
 
         if (user) {
-          // Check if this user has a doctor record
           const { data: userDoctor, error: doctorError } = await supabase
             .from("doctors")
             .select("*")
@@ -43,30 +74,20 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
             .maybeSingle();
 
           if (!doctorError && userDoctor) {
-            console.log("Found doctor for logged-in user:", userDoctor.slug);
-            setDoctor(userDoctor);
-            setIsLoading(false);
-            return;
+            // If there's a URL slug for a DIFFERENT doctor, don't override
+            const slug = resolveSlug();
+            if (slug === "default" || slug === userDoctor.slug) {
+              console.log("Found doctor for logged-in user:", userDoctor.slug);
+              setDoctor(userDoctor);
+              setIsLoading(false);
+              return;
+            }
+            // Otherwise fall through to load the requested doctor
           }
         }
 
-        // If no logged-in doctor, check subdomain or query param (for public site visitors)
-        const hostname = window.location.hostname;
-        const parts = hostname.split(".");
-
-        let slug = "default";
-
-        // For production: extract subdomain
-        if (parts.length >= 3 && !hostname.includes("localhost")) {
-          slug = parts[0];
-        }
-
-        // For preview/development, check URL params
-        const urlParams = new URLSearchParams(window.location.search);
-        const doctorParam = urlParams.get("doctor");
-        if (doctorParam) {
-          slug = doctorParam;
-        }
+        // Load doctor by slug
+        const slug = resolveSlug();
 
         const { data, error: fetchError } = await supabase
           .from("doctors")
@@ -107,7 +128,6 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
-        setIsLoading(true);
         loadDoctor();
       }
     });
@@ -115,7 +135,7 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
     loadDoctor();
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [doctorParam]); // Re-run when URL doctor param changes
 
   return (
     <DoctorContext.Provider
