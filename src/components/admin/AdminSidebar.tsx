@@ -2,6 +2,7 @@ import { Building2, Calendar, ClipboardList, MessageSquare, LayoutDashboard, Che
 import { NavLink } from '@/components/NavLink';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useDoctorSlug } from '@/hooks/useDoctorSlug';
 import {
   Sidebar,
   SidebarContent,
