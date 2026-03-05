@@ -22,6 +22,7 @@ export function AdminSidebar() {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const { state, toggleSidebar } = useSidebar();
+  const { buildPath } = useDoctorSlug();
   const collapsed = state === 'collapsed';
   const isRTL = language === 'ar';
 
