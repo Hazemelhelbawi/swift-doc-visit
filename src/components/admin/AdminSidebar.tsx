@@ -79,7 +79,7 @@ export function AdminSidebar() {
 
       <SidebarFooter className="border-t border-border p-2 space-y-2">
         <NavLink 
-          to="/" 
+          to={buildPath("/")} 
           className={`flex items-center gap-3 px-3 py-2 hover:bg-muted/50 rounded-md transition-colors text-muted-foreground hover:text-foreground ${isRTL ? 'flex-row-reverse' : ''}`}
         >
           <Home className="h-4 w-4 shrink-0" />
