@@ -48,13 +48,13 @@ function RedirectHandler() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
-      <DoctorProvider>
-        <ThemeProvider>
-          <AuthProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
+      <BrowserRouter>
+        <DoctorProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
                 <RedirectHandler />
                 <Routes>
                   <Route path="/" element={<Index />} />
