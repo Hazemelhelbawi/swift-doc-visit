@@ -142,7 +142,7 @@ export const Header = () => {
               {user ? (
                 <>
                   {isAdmin && (
-                    <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                    <Link to={buildPath('/dashboard')} onClick={() => setIsMenuOpen(false)}>
                       <Button variant="outline" className="w-full">{t('nav.dashboard')}</Button>
                     </Link>
                   )}
