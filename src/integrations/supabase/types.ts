@@ -374,6 +374,17 @@ export type Database = {
           start_time: string
         }[]
       }
+      get_doctor_by_slug: {
+        Args: { p_slug: string }
+        Returns: {
+          created_at: string
+          id: string
+          is_active: boolean
+          slug: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       get_doctor_id_for_user: { Args: { _user_id: string }; Returns: string }
       get_schedule_booking_count: {
         Args: { schedule_uuid: string }

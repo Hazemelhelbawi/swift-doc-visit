@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface Doctor {
   id: string;
   slug: string;
-  email: string;
+  email?: string;
   user_id: string | null;
   is_active: boolean;
 }
@@ -69,7 +69,7 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
         if (user) {
           const { data: userDoctor, error: doctorError } = await supabase
             .from("doctors")
-            .select("*")
+            .select("id, slug, user_id, is_active")
             .eq("user_id", user.id)
             .eq("is_active", true)
             .maybeSingle();
@@ -87,31 +87,23 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
           }
         }
 
-        // Load doctor by slug
+        // Load doctor by slug using RPC (works for unauthenticated users too)
         const slug = resolveSlug();
 
-        const { data, error: fetchError } = await supabase
-          .from("doctors")
-          .select("*")
-          .eq("slug", slug)
-          .eq("is_active", true)
-          .maybeSingle();
+        const { data: rpcData, error: rpcError } = await supabase
+          .rpc("get_doctor_by_slug", { p_slug: slug });
 
-        if (fetchError) throw fetchError;
+        if (rpcError) throw rpcError;
 
-        if (data) {
-          setDoctor(data);
+        if (rpcData && rpcData.length > 0) {
+          setDoctor(rpcData[0] as Doctor);
         } else {
           // Fallback to default doctor
-          const { data: defaultDoctor } = await supabase
-            .from("doctors")
-            .select("*")
-            .eq("slug", "default")
-            .eq("is_active", true)
-            .maybeSingle();
+          const { data: defaultData } = await supabase
+            .rpc("get_doctor_by_slug", { p_slug: "default" });
 
-          if (defaultDoctor) {
-            setDoctor(defaultDoctor);
+          if (defaultData && defaultData.length > 0) {
+            setDoctor(defaultData[0] as Doctor);
           } else {
             setError("No doctor found");
           }
