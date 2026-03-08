@@ -87,28 +87,27 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
           }
         }
 
-        // Load doctor by slug
+        // Load doctor by slug using RPC (works for unauthenticated users too)
         const slug = resolveSlug();
 
-        const { data, error: fetchError } = await supabase
-          .from("doctors")
-          .select("id, slug, user_id, is_active, created_at, updated_at")
-          .eq("slug", slug)
-          .eq("is_active", true)
-          .maybeSingle();
+        const { data: rpcData, error: rpcError } = await supabase
+          .rpc("get_doctor_by_slug", { p_slug: slug });
 
-        if (fetchError) throw fetchError;
+        if (rpcError) throw rpcError;
 
-        if (data) {
-          setDoctor(data);
+        if (rpcData && rpcData.length > 0) {
+          setDoctor(rpcData[0] as Doctor);
         } else {
           // Fallback to default doctor
-          const { data: defaultDoctor } = await supabase
-            .from("doctors")
-            .select("id, slug, user_id, is_active, created_at, updated_at")
-            .eq("slug", "default")
-            .eq("is_active", true)
-            .maybeSingle();
+          const { data: defaultData } = await supabase
+            .rpc("get_doctor_by_slug", { p_slug: "default" });
+
+          if (defaultData && defaultData.length > 0) {
+            setDoctor(defaultData[0] as Doctor);
+          } else {
+            setError("No doctor found");
+          }
+        }
 
           if (defaultDoctor) {
             setDoctor(defaultDoctor);
