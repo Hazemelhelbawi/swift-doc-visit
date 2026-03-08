@@ -61,7 +61,7 @@ export function AdminSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild tooltip={item.title}>
                     <NavLink 
-                      to={item.url} 
+                      to={buildPath(item.url)} 
                       end={item.url === '/admin'}
                       className={`flex items-center gap-3 hover:bg-muted/50 rounded-md transition-colors ${isRTL ? 'flex-row-reverse' : ''}`}
                       activeClassName="bg-primary/10 text-primary font-medium"
