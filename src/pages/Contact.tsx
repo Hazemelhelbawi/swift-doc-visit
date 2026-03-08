@@ -35,6 +35,7 @@ type ContactFormValues = z.infer<typeof contactSchema>;
 const Contact = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { doctorId } = useDoctor();
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const form = useForm<ContactFormValues>({
