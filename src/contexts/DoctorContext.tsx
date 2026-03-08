@@ -108,13 +108,6 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
             setError("No doctor found");
           }
         }
-
-          if (defaultDoctor) {
-            setDoctor(defaultDoctor);
-          } else {
-            setError("No doctor found");
-          }
-        }
       } catch (err) {
         console.error("Error loading doctor:", err);
         setError("Failed to load doctor");
