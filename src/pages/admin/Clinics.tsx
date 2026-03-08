@@ -87,7 +87,10 @@ export default function AdminClinics() {
       toast.success(t('admin.clinicCreated'));
       resetForm();
     },
-    onError: () => toast.error(t('admin.errorCreating')),
+    onError: (error) => {
+      console.error('Clinic create error:', error);
+      toast.error(t('admin.errorCreating') + ': ' + (error as any)?.message);
+    },
   });
 
   const updateMutation = useMutation({
