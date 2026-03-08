@@ -140,7 +140,7 @@ export type Database = {
       consultation_requests: {
         Row: {
           created_at: string
-          doctor_id: string | null
+          doctor_id: string
           full_name: string
           id: string
           message: string | null
@@ -150,7 +150,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          doctor_id?: string | null
+          doctor_id: string
           full_name: string
           id?: string
           message?: string | null
@@ -160,7 +160,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          doctor_id?: string | null
+          doctor_id?: string
           full_name?: string
           id?: string
           message?: string | null
