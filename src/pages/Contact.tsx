@@ -49,11 +49,13 @@ const Contact = () => {
 
   const { mutate: submitRequest, isPending } = useMutation({
     mutationFn: async (values: ContactFormValues) => {
+      if (!doctorId) throw new Error("No doctor context");
       const { error } = await supabase.from("consultation_requests").insert([
         {
           full_name: values.full_name,
           phone: values.phone,
           message: values.message || null,
+          doctor_id: doctorId,
         },
       ]);
       if (error) throw error;
