@@ -92,7 +92,7 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
 
         const { data, error: fetchError } = await supabase
           .from("doctors")
-          .select("*")
+          .select("id, slug, user_id, is_active, created_at, updated_at")
           .eq("slug", slug)
           .eq("is_active", true)
           .maybeSingle();
