@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/layout/Layout";
 import { useDoctorProfile } from "@/hooks/useSiteSettings";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useDoctor } from "@/contexts/DoctorContext";
 
 const contactSchema = z.object({
   full_name: z.string().min(2, "Name must be at least 2 characters"),
