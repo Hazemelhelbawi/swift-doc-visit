@@ -216,17 +216,17 @@ export default function AdminSettings() {
     accent_color: "#E8655A",
   });
 
-  // Sync state with loaded data
+  // Sync state with loaded data — merge with defaults so missing fields get initial values
   useEffect(() => {
-    if (doctorProfileData) setDoctor(doctorProfileData);
+    if (doctorProfileData) setDoctor({ ...defaultDoctor, ...doctorProfileData });
   }, [doctorProfileData]);
 
   useEffect(() => {
-    if (heroContentData) setHero(heroContentData);
+    if (heroContentData) setHero({ ...defaultHero, ...heroContentData });
   }, [heroContentData]);
 
   useEffect(() => {
-    if (servicesContentData) setServices(servicesContentData);
+    if (servicesContentData) setServices({ ...defaultServices, ...servicesContentData });
   }, [servicesContentData]);
 
   useEffect(() => {
@@ -252,23 +252,31 @@ export default function AdminSettings() {
         .maybeSingle();
 
       if (existing) {
-        // Update existing record
-        const { error } = await supabase
+        // Update existing record and return updated row to verify
+        const { data, error } = await supabase
           .from("site_settings")
           .update({ value: value as unknown as Json })
           .eq("key", key)
-          .eq("doctor_id", doctorId);
+          .eq("doctor_id", doctorId)
+          .select();
         if (error) throw error;
+        if (!data || data.length === 0) {
+          throw new Error("Update failed — no rows were affected. Please check your permissions.");
+        }
       } else {
         // Insert new record
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("site_settings")
           .insert({
             key,
             value: value as unknown as Json,
             doctor_id: doctorId,
-          });
+          })
+          .select();
         if (error) throw error;
+        if (!data || data.length === 0) {
+          throw new Error("Insert failed — no rows were created. Please check your permissions.");
+        }
       }
     },
     onSuccess: (_, { key }) => {
@@ -280,7 +288,7 @@ export default function AdminSettings() {
     },
     onError: (error) => {
       console.error("Save error:", error);
-      toast.error(t("admin.errorSaving"));
+      toast.error(error.message || t("admin.errorSaving"));
     },
   });
 
