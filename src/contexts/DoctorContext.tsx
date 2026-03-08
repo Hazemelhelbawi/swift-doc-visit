@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface Doctor {
   id: string;
   slug: string;
-  email: string;
+  email?: string;
   user_id: string | null;
   is_active: boolean;
 }
