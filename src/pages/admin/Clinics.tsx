@@ -67,7 +67,7 @@ export default function AdminClinics() {
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       if (!doctorId) throw new Error('No doctor context');
-      const { error } = await supabase.from('clinics').insert({
+      const { data: result, error } = await supabase.from('clinics').insert({
         name: data.name,
         name_ar: data.name_ar || null,
         address: data.address,
@@ -79,8 +79,10 @@ export default function AdminClinics() {
         doctor_specialty: data.doctor_specialty || null,
         doctor_specialty_ar: data.doctor_specialty_ar || null,
         doctor_id: doctorId,
-      });
+      }).select();
       if (error) throw error;
+      if (!result || result.length === 0) throw new Error('Insert succeeded but no data returned - possible RLS issue');
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-clinics', doctorId] });
