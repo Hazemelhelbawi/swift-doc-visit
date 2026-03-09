@@ -281,7 +281,7 @@ const Contact = () => {
                   <span className="font-medium text-foreground">
                     {t("contact.info.emergency")}:{" "}
                   </span>
-                  <span dir="ltr">+1 (555) 911-1234</span>
+                  <span dir="ltr">{doctorProfile?.contact_phone || "+1 (555) 911-1234"}</span>
                 </p>
               </div>
             </motion.div>
