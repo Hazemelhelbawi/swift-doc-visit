@@ -28,7 +28,16 @@ import AdminAppointments from "./pages/admin/Appointments";
 import AdminConsultations from "./pages/admin/Consultations";
 import AdminSettings from "./pages/admin/Settings";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 0,
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
+      refetchOnMount: true,
+    },
+  },
+});
 
 // Handle 404.html redirect for SPA on static hosting
 function RedirectHandler() {
