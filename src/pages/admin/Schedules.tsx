@@ -99,32 +99,42 @@ export default function AdminSchedules() {
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       if (!doctorId) throw new Error('No doctor context');
-      const { error } = await supabase.from('schedules').insert({
-        clinic_id: data.clinic_id,
-        date: data.date,
-        start_time: data.start_time,
-        end_time: data.end_time,
-        max_patients: data.max_patients,
-        is_active: data.is_active,
-        is_recurring: data.is_recurring,
-        recurrence_pattern: data.is_recurring ? data.recurrence_pattern : null,
-        recurrence_days: data.is_recurring && data.recurrence_days.length > 0 ? data.recurrence_days : null,
-        recurrence_end_date: data.is_recurring && data.recurrence_end_date ? data.recurrence_end_date : null,
-        doctor_id: doctorId,
-      });
+
+      const { data: createdRows, error } = await supabase
+        .from('schedules')
+        .insert({
+          clinic_id: data.clinic_id,
+          date: data.date,
+          start_time: data.start_time,
+          end_time: data.end_time,
+          max_patients: data.max_patients,
+          is_active: data.is_active,
+          is_recurring: data.is_recurring,
+          recurrence_pattern: data.is_recurring ? data.recurrence_pattern : null,
+          recurrence_days: data.is_recurring && data.recurrence_days.length > 0 ? data.recurrence_days : null,
+          recurrence_end_date: data.is_recurring && data.recurrence_end_date ? data.recurrence_end_date : null,
+          doctor_id: doctorId,
+        })
+        .select('id');
+
       if (error) throw error;
+      if (!createdRows || createdRows.length === 0) {
+        throw new Error('Create failed — no rows were affected. Please check your permissions.');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-schedules', doctorId] });
       toast.success(t('admin.scheduleCreated'));
       resetForm();
     },
-    onError: () => toast.error(t('admin.errorCreating')),
+    onError: (error) => toast.error((error as Error)?.message || t('admin.errorCreating')),
   });
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
-      const { error } = await supabase
+      if (!doctorId) throw new Error('No doctor context');
+
+      const { data: updatedRows, error } = await supabase
         .from('schedules')
         .update({
           clinic_id: data.clinic_id,
@@ -138,27 +148,44 @@ export default function AdminSchedules() {
           recurrence_days: data.is_recurring && data.recurrence_days.length > 0 ? data.recurrence_days : null,
           recurrence_end_date: data.is_recurring && data.recurrence_end_date ? data.recurrence_end_date : null,
         })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('doctor_id', doctorId)
+        .select('id');
+
       if (error) throw error;
+      if (!updatedRows || updatedRows.length === 0) {
+        throw new Error('Update failed — no rows were affected. Please check your permissions.');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-schedules', doctorId] });
       toast.success(t('admin.scheduleUpdated'));
       resetForm();
     },
-    onError: () => toast.error(t('admin.errorUpdating')),
+    onError: (error) => toast.error((error as Error)?.message || t('admin.errorUpdating')),
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('schedules').delete().eq('id', id);
+      if (!doctorId) throw new Error('No doctor context');
+
+      const { data: deletedRows, error } = await supabase
+        .from('schedules')
+        .delete()
+        .eq('id', id)
+        .eq('doctor_id', doctorId)
+        .select('id');
+
       if (error) throw error;
+      if (!deletedRows || deletedRows.length === 0) {
+        throw new Error('Delete failed — no rows were affected. Please check your permissions.');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-schedules', doctorId] });
       toast.success(t('admin.scheduleDeleted'));
     },
-    onError: () => toast.error(t('admin.errorDeleting')),
+    onError: (error) => toast.error((error as Error)?.message || t('admin.errorDeleting')),
   });
 
   const resetForm = () => {
