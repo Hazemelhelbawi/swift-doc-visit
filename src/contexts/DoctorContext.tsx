@@ -48,7 +48,7 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const hostname = window.location.hostname;
     const parts = hostname.split(".");
-    const isPreviewOrLocal = hostname.includes("localhost") || hostname.includes("lovable") || hostname.includes("lovableproject") || hostname.includes("vercel");
+    const isPreviewOrLocal = hostname.includes("localhost") || hostname.includes("lovable") || hostname.includes("lovableproject") || hostname.includes("vercel") || hostname.includes("vercel.app");
     if (parts.length >= 3 && !isPreviewOrLocal) {
       return parts[0];
     }
