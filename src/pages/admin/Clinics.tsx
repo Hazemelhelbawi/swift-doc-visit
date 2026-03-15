@@ -84,10 +84,13 @@ export default function AdminClinics() {
       if (!result || result.length === 0) throw new Error('Insert succeeded but no data returned - possible RLS issue');
       return result;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-clinics', doctorId] });
-      queryClient.invalidateQueries({ queryKey: ['admin-clinics-list', doctorId] });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] });
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['admin-clinics', doctorId] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-clinics-list', doctorId] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] }),
+      ]);
+      await queryClient.refetchQueries({ queryKey: ['admin-clinics', doctorId] });
       toast.success(t('admin.clinicCreated'));
       resetForm();
     },
@@ -124,10 +127,13 @@ export default function AdminClinics() {
         throw new Error('Update failed — no rows were affected. Please check your permissions.');
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-clinics', doctorId] });
-      queryClient.invalidateQueries({ queryKey: ['admin-clinics-list', doctorId] });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] });
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['admin-clinics', doctorId] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-clinics-list', doctorId] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] }),
+      ]);
+      await queryClient.refetchQueries({ queryKey: ['admin-clinics', doctorId] });
       toast.success(t('admin.clinicUpdated'));
       resetForm();
     },
@@ -150,10 +156,13 @@ export default function AdminClinics() {
         throw new Error('Delete failed — no rows were affected. Please check your permissions.');
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-clinics', doctorId] });
-      queryClient.invalidateQueries({ queryKey: ['admin-clinics-list', doctorId] });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] });
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['admin-clinics', doctorId] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-clinics-list', doctorId] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] }),
+      ]);
+      await queryClient.refetchQueries({ queryKey: ['admin-clinics', doctorId] });
       toast.success(t('admin.clinicDeleted'));
     },
     onError: (error) => toast.error((error as Error)?.message || t('admin.errorDeleting')),

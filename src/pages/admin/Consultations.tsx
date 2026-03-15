@@ -51,10 +51,13 @@ export default function AdminConsultations() {
         .eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-consultations', doctorId] });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] });
-      queryClient.invalidateQueries({ queryKey: ['recent-consultations', doctorId] });
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['admin-consultations', doctorId] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] }),
+        queryClient.invalidateQueries({ queryKey: ['recent-consultations', doctorId] }),
+      ]);
+      await queryClient.refetchQueries({ queryKey: ['admin-consultations', doctorId] });
       toast.success(t('admin.statusUpdated'));
     },
     onError: () => toast.error(t('admin.errorUpdating')),
@@ -68,10 +71,13 @@ export default function AdminConsultations() {
         .eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-consultations', doctorId] });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] });
-      queryClient.invalidateQueries({ queryKey: ['recent-consultations', doctorId] });
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['admin-consultations', doctorId] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] }),
+        queryClient.invalidateQueries({ queryKey: ['recent-consultations', doctorId] }),
+      ]);
+      await queryClient.refetchQueries({ queryKey: ['admin-consultations', doctorId] });
       toast.success(t('admin.consultationDeleted'));
     },
     onError: () => toast.error(t('admin.errorDeleting')),

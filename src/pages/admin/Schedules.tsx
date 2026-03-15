@@ -122,9 +122,12 @@ export default function AdminSchedules() {
         throw new Error('Create failed — no rows were affected. Please check your permissions.');
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-schedules', doctorId] });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] });
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['admin-schedules', doctorId] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] }),
+      ]);
+      await queryClient.refetchQueries({ queryKey: ['admin-schedules', doctorId] });
       toast.success(t('admin.scheduleCreated'));
       resetForm();
     },
@@ -158,9 +161,12 @@ export default function AdminSchedules() {
         throw new Error('Update failed — no rows were affected. Please check your permissions.');
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-schedules', doctorId] });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] });
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['admin-schedules', doctorId] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] }),
+      ]);
+      await queryClient.refetchQueries({ queryKey: ['admin-schedules', doctorId] });
       toast.success(t('admin.scheduleUpdated'));
       resetForm();
     },
@@ -183,9 +189,12 @@ export default function AdminSchedules() {
         throw new Error('Delete failed — no rows were affected. Please check your permissions.');
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-schedules', doctorId] });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] });
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['admin-schedules', doctorId] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] }),
+      ]);
+      await queryClient.refetchQueries({ queryKey: ['admin-schedules', doctorId] });
       toast.success(t('admin.scheduleDeleted'));
     },
     onError: (error) => toast.error((error as Error)?.message || t('admin.errorDeleting')),
