@@ -116,6 +116,7 @@ export default function AdminSchedules() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-schedules', doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] });
       toast.success(t('admin.scheduleCreated'));
       resetForm();
     },
@@ -156,6 +157,7 @@ export default function AdminSchedules() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-schedules', doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] });
       toast.success(t('admin.scheduleDeleted'));
     },
     onError: () => toast.error(t('admin.errorDeleting')),

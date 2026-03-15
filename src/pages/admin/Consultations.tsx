@@ -53,6 +53,8 @@ export default function AdminConsultations() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-consultations', doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['recent-consultations', doctorId] });
       toast.success(t('admin.statusUpdated'));
     },
     onError: () => toast.error(t('admin.errorUpdating')),
@@ -68,6 +70,8 @@ export default function AdminConsultations() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-consultations', doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['recent-consultations', doctorId] });
       toast.success(t('admin.consultationDeleted'));
     },
     onError: () => toast.error(t('admin.errorDeleting')),

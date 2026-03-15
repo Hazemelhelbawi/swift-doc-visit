@@ -1,4 +1,5 @@
 import { Building2, Calendar, ClipboardList, MessageSquare, LayoutDashboard, ChevronLeft, ChevronRight, Home, Settings } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import { NavLink } from '@/components/NavLink';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -21,8 +22,10 @@ export function AdminSidebar() {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const { state, toggleSidebar } = useSidebar();
+  const location = useLocation();
   const collapsed = state === 'collapsed';
   const isRTL = language === 'ar';
+  const search = location.search || '';
 
   const menuItems = [
     { title: t('admin.dashboard'), url: '/admin', icon: LayoutDashboard },
@@ -59,7 +62,7 @@ export function AdminSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild tooltip={item.title}>
                     <NavLink 
-                      to={item.url} 
+                      to={`${item.url}${search}`}
                       end={item.url === '/admin'}
                       className={`flex items-center gap-3 hover:bg-muted/50 rounded-md transition-colors ${isRTL ? 'flex-row-reverse' : ''}`}
                       activeClassName="bg-primary/10 text-primary font-medium"
@@ -77,7 +80,7 @@ export function AdminSidebar() {
 
       <SidebarFooter className="border-t border-border p-2 space-y-2">
         <NavLink 
-          to="/" 
+          to={search ? `/${search}` : '/'}
           className={`flex items-center gap-3 px-3 py-2 hover:bg-muted/50 rounded-md transition-colors text-muted-foreground hover:text-foreground ${isRTL ? 'flex-row-reverse' : ''}`}
         >
           <Home className="h-4 w-4 shrink-0" />

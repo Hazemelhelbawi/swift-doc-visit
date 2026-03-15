@@ -102,6 +102,37 @@ export default function AdminSettings() {
   const queryClient = useQueryClient();
   const { doctorId } = useDoctor();
 
+  // image upload state helpers
+  const [uploadingDoctorImage, setUploadingDoctorImage] = useState(false);
+  const [uploadingHeroImage, setUploadingHeroImage] = useState(false);
+
+  // NOTE: make sure this bucket exists in your Supabase project. The default
+  // public bucket is usually "public" but feel free to change it.
+  const IMAGE_BUCKET = import.meta.env.VITE_IMAGE_BUCKET || "images";
+
+  async function uploadImage(file: File): Promise<string> {
+    const uniqueName = `${Date.now()}_${file.name}`;
+    const { error: uploadError, data } = await supabase
+      .storage
+      .from(IMAGE_BUCKET)
+      .upload(uniqueName, file, {
+        upsert: false,
+        contentType: file.type,
+      });
+
+    if (uploadError) {
+      console.error("Upload error:", uploadError);
+      throw uploadError;
+    }
+
+    const { data: publicUrl } = supabase
+      .storage
+      .from(IMAGE_BUCKET)
+      .getPublicUrl(uniqueName);
+
+    return publicUrl.publicUrl;
+  }
+
   // Fetch data with doctor_id filter
   const { data: doctorProfileData, isLoading: loadingDoctor } = useQuery({
     queryKey: ["site-settings", "doctor_profile", doctorId],
@@ -260,13 +291,11 @@ export default function AdminSettings() {
         if (error) throw error;
       } else {
         // Insert new record
-        const { error } = await supabase
-          .from("site_settings")
-          .insert({
-            key,
-            value: value as unknown as Json,
-            doctor_id: doctorId,
-          });
+        const { error } = await supabase.from("site_settings").insert({
+          key,
+          value: value as unknown as Json,
+          doctor_id: doctorId,
+        });
         if (error) throw error;
       }
     },
@@ -511,6 +540,40 @@ export default function AdminSettings() {
                     </div>
                     <div className="space-y-2">
                       <Label>{t("admin.imageUrl")}</Label>
+                      <div className="flex items-center space-x-4">
+                        {doctor.image_url && (
+                          <img
+                            src={doctor.image_url}
+                            alt="doctor"
+                            className="h-20 w-20 object-cover rounded"
+                          />
+                        )}
+                        <div className="flex flex-col">
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            disabled={uploadingDoctorImage}
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              try {
+                                setUploadingDoctorImage(true);
+                                const url = await uploadImage(file);
+                                setDoctor({ ...doctor, image_url: url });
+                                toast.success("Image uploaded");
+                              } catch (err) {
+                                console.error(err);
+                                toast.error("Upload failed");
+                              } finally {
+                                setUploadingDoctorImage(false);
+                              }
+                            }}
+                          />
+                          {uploadingDoctorImage && (
+                            <Loader2 className="animate-spin mt-2" />
+                          )}
+                        </div>
+                      </div>
                       <Input
                         value={doctor.image_url || ""}
                         onChange={(e) =>
@@ -973,6 +1036,40 @@ export default function AdminSettings() {
                   </div>
                   <div className="space-y-2 sm:col-span-2">
                     <Label>{t("admin.heroImage")}</Label>
+                    <div className="flex items-center space-x-4">
+                      {hero.image_url && (
+                        <img
+                          src={hero.image_url}
+                          alt="hero"
+                          className="h-20 w-20 object-cover rounded"
+                        />
+                      )}
+                      <div className="flex flex-col">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          disabled={uploadingHeroImage}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            try {
+                              setUploadingHeroImage(true);
+                              const url = await uploadImage(file);
+                              setHero({ ...hero, image_url: url });
+                              toast.success("Image uploaded");
+                            } catch (err) {
+                              console.error(err);
+                              toast.error("Upload failed");
+                            } finally {
+                              setUploadingHeroImage(false);
+                            }
+                          }}
+                        />
+                        {uploadingHeroImage && (
+                          <Loader2 className="animate-spin mt-2" />
+                        )}
+                      </div>
+                    </div>
                     <Input
                       value={hero.image_url || ""}
                       onChange={(e) =>

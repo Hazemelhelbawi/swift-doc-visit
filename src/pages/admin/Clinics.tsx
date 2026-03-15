@@ -84,6 +84,8 @@ export default function AdminClinics() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-clinics', doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-clinics-list', doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] });
       toast.success(t('admin.clinicCreated'));
       resetForm();
     },
@@ -111,6 +113,8 @@ export default function AdminClinics() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-clinics', doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-clinics-list', doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] });
       toast.success(t('admin.clinicUpdated'));
       resetForm();
     },
@@ -124,6 +128,8 @@ export default function AdminClinics() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-clinics', doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-clinics-list', doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] });
       toast.success(t('admin.clinicDeleted'));
     },
     onError: () => toast.error(t('admin.errorDeleting')),

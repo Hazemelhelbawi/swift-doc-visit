@@ -59,7 +59,9 @@ export default function AdminAppointments() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-appointments', doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['recent-appointments', doctorId] });
       toast.success(t('admin.statusUpdated'));
     },
     onError: () => toast.error(t('admin.errorUpdating')),

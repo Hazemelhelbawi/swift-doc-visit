@@ -28,13 +28,31 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     const loadDoctor = async () => {
       try {
-        // First, check if logged-in user is a doctor
+        const urlParams = new URLSearchParams(window.location.search);
+        const doctorParam = urlParams.get("doctor");
+
+        // Prefer URL ?doctor=slug so admin and all API requests use the same doctor consistently
+        if (doctorParam) {
+          const { data, error: fetchError } = await supabase
+            .from("doctors")
+            .select("*")
+            .eq("slug", doctorParam)
+            .eq("is_active", true)
+            .maybeSingle();
+          if (!fetchError && data) {
+            setDoctor(data);
+            setError(null);
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        // If no URL param (or invalid slug), check if logged-in user is a doctor
         const {
           data: { user },
         } = await supabase.auth.getUser();
 
         if (user) {
-          // Check if this user has a doctor record
           const { data: userDoctor, error: doctorError } = await supabase
             .from("doctors")
             .select("*")
@@ -43,29 +61,19 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
             .maybeSingle();
 
           if (!doctorError && userDoctor) {
-            console.log("Found doctor for logged-in user:", userDoctor.slug);
             setDoctor(userDoctor);
+            setError(null);
             setIsLoading(false);
             return;
           }
         }
 
-        // If no logged-in doctor, check subdomain or query param (for public site visitors)
+        // Otherwise resolve by subdomain or default
         const hostname = window.location.hostname;
         const parts = hostname.split(".");
-
         let slug = "default";
-
-        // For production: extract subdomain
         if (parts.length >= 3 && !hostname.includes("localhost")) {
           slug = parts[0];
-        }
-
-        // For preview/development, check URL params
-        const urlParams = new URLSearchParams(window.location.search);
-        const doctorParam = urlParams.get("doctor");
-        if (doctorParam) {
-          slug = doctorParam;
         }
 
         const { data, error: fetchError } = await supabase
@@ -79,8 +87,8 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
 
         if (data) {
           setDoctor(data);
+          setError(null);
         } else {
-          // Fallback to default doctor
           const { data: defaultDoctor } = await supabase
             .from("doctors")
             .select("*")

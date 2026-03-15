@@ -1,1 +1,9 @@
-project_id = "jrbeyrjnbfrzbuvbyqtn"
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  // …
+  server: {
+    // ensures `/foo` is rewritten to index.html during `npm run dev`
+    historyApiFallback: true,
+  },
+});
