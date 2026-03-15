@@ -6,16 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Building2, Calendar, ClipboardList, MessageSquare, TrendingUp, Users, ArrowRight, Settings, Clock } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { useDoctor } from '@/contexts/DoctorContext';
+import { useDoctorSlug } from '@/hooks/useDoctorSlug';
 import { useSeedDoctorDefaults } from '@/hooks/useSeedDoctorDefaults';
 
 export default function AdminDashboard() {
   const { t } = useTranslation();
   const { doctorId } = useDoctor();
-  const location = useLocation();
-  const search = location.search || '';
+  const { buildPath } = useDoctorSlug();
   useSeedDoctorDefaults();
 
   const { data: stats } = useQuery({
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
             <h2 className="text-2xl font-bold text-foreground">{t('admin.overview')}</h2>
             <p className="text-muted-foreground">{t('admin.welcomeMessage')}</p>
           </div>
-          <Link to={`/admin/settings${search}`}>
+          <Link to={buildPath('/admin/settings')}>
             <Button variant="outline" className="gap-2">
               <Settings className="h-4 w-4" />
               {t('admin.settings')}
@@ -144,7 +144,7 @@ export default function AdminDashboard() {
         {/* Stats Cards */}
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {statCards.map((card) => (
-            <Link key={card.title} to={`${card.link}${search}`}>
+            <Link key={card.title} to={buildPath(card.link)}>
               <Card className="hover:shadow-md transition-shadow cursor-pointer group">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -178,7 +178,7 @@ export default function AdminDashboard() {
                 <ClipboardList className="h-5 w-5 text-primary" />
                 {t('admin.recentAppointments')}
               </CardTitle>
-              <Link to={`/admin/appointments${search}`}>
+              <Link to={buildPath('/admin/appointments')}>
                 <Button variant="ghost" size="sm" className="gap-1">
                   {t('admin.viewAll')}
                   <ArrowRight className="h-4 w-4" />
@@ -219,7 +219,7 @@ export default function AdminDashboard() {
                 <MessageSquare className="h-5 w-5 text-primary" />
                 {t('admin.recentConsultations')}
               </CardTitle>
-              <Link to="/admin/consultations">
+              <Link to={buildPath('/admin/consultations')}>
                 <Button variant="ghost" size="sm" className="gap-1">
                   {t('admin.viewAll')}
                   <ArrowRight className="h-4 w-4" />
@@ -264,25 +264,25 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              <Link to={`/admin/clinics${search}`}>
+              <Link to={buildPath('/admin/clinics')}>
                 <Button variant="outline" className="w-full justify-start gap-2">
                   <Building2 className="h-4 w-4" />
                   {t('admin.addClinic')}
                 </Button>
               </Link>
-              <Link to={`/admin/schedules${search}`}>
+              <Link to={buildPath('/admin/schedules')}>
                 <Button variant="outline" className="w-full justify-start gap-2">
                   <Calendar className="h-4 w-4" />
                   {t('admin.addSchedule')}
                 </Button>
               </Link>
-              <Link to={`/admin/appointments${search}`}>
+              <Link to={buildPath('/admin/appointments')}>
                 <Button variant="outline" className="w-full justify-start gap-2">
                   <ClipboardList className="h-4 w-4" />
                   {t('admin.manageAppointments')}
                 </Button>
               </Link>
-              <Link to={`/admin/settings${search}`}>
+              <Link to={buildPath('/admin/settings')}>
                 <Button variant="outline" className="w-full justify-start gap-2">
                   <Settings className="h-4 w-4" />
                   {t('admin.updateProfile')}

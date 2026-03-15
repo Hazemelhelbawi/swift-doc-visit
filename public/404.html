@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Redirecting...</title>
+  <script>
+    // SPA fallback: redirect 404s to index with the original path
+    // Preserve both pathname and query string so ?doctor=slug survives
+    var pathname = window.location.pathname;
+    var search = window.location.search;
+    var hash = window.location.hash;
+    var fullPath = pathname + search + hash;
+    window.location.replace('/?redirect=' + encodeURIComponent(fullPath));
+  </script>
+</head>
+<body>
+  Redirecting...
+</body>
+</html>

@@ -67,7 +67,7 @@ export default function AdminClinics() {
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       if (!doctorId) throw new Error('No doctor context');
-      const { error } = await supabase.from('clinics').insert({
+      const { data: result, error } = await supabase.from('clinics').insert({
         name: data.name,
         name_ar: data.name_ar || null,
         address: data.address,
@@ -79,8 +79,10 @@ export default function AdminClinics() {
         doctor_specialty: data.doctor_specialty || null,
         doctor_specialty_ar: data.doctor_specialty_ar || null,
         doctor_id: doctorId,
-      });
+      }).select();
       if (error) throw error;
+      if (!result || result.length === 0) throw new Error('Insert succeeded but no data returned - possible RLS issue');
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-clinics', doctorId] });
@@ -89,12 +91,17 @@ export default function AdminClinics() {
       toast.success(t('admin.clinicCreated'));
       resetForm();
     },
-    onError: () => toast.error(t('admin.errorCreating')),
+    onError: (error) => {
+      console.error('Clinic create error:', error);
+      toast.error(t('admin.errorCreating') + ': ' + (error as any)?.message);
+    },
   });
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
-      const { error } = await supabase
+      if (!doctorId) throw new Error('No doctor context');
+
+      const { data: updatedRows, error } = await supabase
         .from('clinics')
         .update({
           name: data.name,
@@ -108,8 +115,14 @@ export default function AdminClinics() {
           doctor_specialty: data.doctor_specialty || null,
           doctor_specialty_ar: data.doctor_specialty_ar || null,
         })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('doctor_id', doctorId)
+        .select('id');
+
       if (error) throw error;
+      if (!updatedRows || updatedRows.length === 0) {
+        throw new Error('Update failed — no rows were affected. Please check your permissions.');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-clinics', doctorId] });
@@ -118,13 +131,24 @@ export default function AdminClinics() {
       toast.success(t('admin.clinicUpdated'));
       resetForm();
     },
-    onError: () => toast.error(t('admin.errorUpdating')),
+    onError: (error) => toast.error((error as Error)?.message || t('admin.errorUpdating')),
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('clinics').delete().eq('id', id);
+      if (!doctorId) throw new Error('No doctor context');
+
+      const { data: deletedRows, error } = await supabase
+        .from('clinics')
+        .delete()
+        .eq('id', id)
+        .eq('doctor_id', doctorId)
+        .select('id');
+
       if (error) throw error;
+      if (!deletedRows || deletedRows.length === 0) {
+        throw new Error('Delete failed — no rows were affected. Please check your permissions.');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-clinics', doctorId] });
@@ -132,7 +156,7 @@ export default function AdminClinics() {
       queryClient.invalidateQueries({ queryKey: ['admin-stats', doctorId] });
       toast.success(t('admin.clinicDeleted'));
     },
-    onError: () => toast.error(t('admin.errorDeleting')),
+    onError: (error) => toast.error((error as Error)?.message || t('admin.errorDeleting')),
   });
 
   const resetForm = () => {

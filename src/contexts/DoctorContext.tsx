@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Doctor {
   id: string;
   slug: string;
-  email: string;
+  email?: string;
   user_id: string | null;
   is_active: boolean;
 }
@@ -18,36 +19,69 @@ interface DoctorContextType {
 
 const DoctorContext = createContext<DoctorContextType | undefined>(undefined);
 
+const DOCTOR_SLUG_KEY = "active_doctor_slug";
+
 export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+
+  // Get slug from URL param reactively
+  const doctorParam = searchParams.get("doctor");
+
+  // Persist slug in sessionStorage
+  useEffect(() => {
+    if (doctorParam) {
+      sessionStorage.setItem(DOCTOR_SLUG_KEY, doctorParam);
+    }
+  }, [doctorParam]);
+
+  // Resolve the effective slug: URL param > sessionStorage > subdomain > default
+  const resolveSlug = (): string => {
+    if (doctorParam) return doctorParam;
+
+    const stored = sessionStorage.getItem(DOCTOR_SLUG_KEY);
+    if (stored) return stored;
+
+    const hostname = window.location.hostname;
+    const parts = hostname.split(".");
+    const isPreviewOrLocal =
+      hostname.includes("localhost") ||
+      hostname.includes("lovable") ||
+      hostname.includes("lovableproject") ||
+      hostname.includes("vercel") ||
+      hostname.includes("vercel.app");
+    if (parts.length >= 3 && !isPreviewOrLocal) {
+      return parts[0];
+    }
+
+    return "default";
+  };
 
   useEffect(() => {
     const loadDoctor = async () => {
       try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const doctorParam = urlParams.get("doctor");
+        setError(null);
+        const slug = resolveSlug();
 
-        // Prefer URL ?doctor=slug so admin and all API requests use the same doctor consistently
-        if (doctorParam) {
-          const { data, error: fetchError } = await supabase
-            .from("doctors")
-            .select("*")
-            .eq("slug", doctorParam)
-            .eq("is_active", true)
-            .maybeSingle();
-          if (!fetchError && data) {
-            setDoctor(data);
-            setError(null);
-            setIsLoading(false);
-            return;
-          }
+        // Accept any incoming slug: try to load doctor by it first (automatic merge with URL/session)
+        const { data: doctorBySlug, error: slugError } = await supabase
+          .from("doctors")
+          .select("id, slug, user_id, is_active")
+          .eq("slug", slug)
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (!slugError && doctorBySlug) {
+          setDoctor(doctorBySlug);
+          setIsLoading(false);
+          return;
         }
 
-        // If no URL param (or invalid slug), check if logged-in user is a doctor
+        // No doctor for incoming slug: fall back to logged-in user's doctor
         const {
           data: { user },
         } = await supabase.auth.getUser();
@@ -55,52 +89,30 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
         if (user) {
           const { data: userDoctor, error: doctorError } = await supabase
             .from("doctors")
-            .select("*")
+            .select("id, slug, user_id, is_active")
             .eq("user_id", user.id)
             .eq("is_active", true)
             .maybeSingle();
 
           if (!doctorError && userDoctor) {
             setDoctor(userDoctor);
-            setError(null);
             setIsLoading(false);
             return;
           }
         }
 
-        // Otherwise resolve by subdomain or default
-        const hostname = window.location.hostname;
-        const parts = hostname.split(".");
-        let slug = "default";
-        if (parts.length >= 3 && !hostname.includes("localhost")) {
-          slug = parts[0];
-        }
-
-        const { data, error: fetchError } = await supabase
+        // Fallback to default doctor when slug not found and no logged-in doctor
+        const { data: defaultDoctor } = await supabase
           .from("doctors")
-          .select("*")
-          .eq("slug", slug)
+          .select("id, slug, user_id, is_active")
+          .eq("slug", "default")
           .eq("is_active", true)
           .maybeSingle();
 
-        if (fetchError) throw fetchError;
-
-        if (data) {
-          setDoctor(data);
-          setError(null);
+        if (defaultDoctor) {
+          setDoctor(defaultDoctor);
         } else {
-          const { data: defaultDoctor } = await supabase
-            .from("doctors")
-            .select("*")
-            .eq("slug", "default")
-            .eq("is_active", true)
-            .maybeSingle();
-
-          if (defaultDoctor) {
-            setDoctor(defaultDoctor);
-          } else {
-            setError("No doctor found");
-          }
+          setError("No doctor found");
         }
       } catch (err) {
         console.error("Error loading doctor:", err);
@@ -115,7 +127,6 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
-        setIsLoading(true);
         loadDoctor();
       }
     });
@@ -123,7 +134,7 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
     loadDoctor();
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [doctorParam]); // Re-run when URL doctor param changes
 
   return (
     <DoctorContext.Provider

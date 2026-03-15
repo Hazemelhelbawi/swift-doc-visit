@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AdminSidebar } from './AdminSidebar';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useDoctorSlug } from '@/hooks/useDoctorSlug';
 import { Loader2 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -13,13 +14,14 @@ interface AdminLayoutProps {
 export function AdminLayout({ children }: AdminLayoutProps) {
   const { user, isLoading, isAdmin } = useAuth();
   const { language } = useLanguage();
+  const { buildPath } = useDoctorSlug();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!isLoading && (!user || !isAdmin)) {
-      navigate('/auth');
+      navigate(buildPath('/auth'));
     }
-  }, [user, isAdmin, isLoading, navigate]);
+  }, [user, isAdmin, isLoading, navigate, buildPath]);
 
   if (isLoading) {
     return (

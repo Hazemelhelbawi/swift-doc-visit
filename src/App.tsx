@@ -1,8 +1,9 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { DoctorProvider } from "@/contexts/DoctorContext";
@@ -27,18 +28,44 @@ import AdminAppointments from "./pages/admin/Appointments";
 import AdminConsultations from "./pages/admin/Consultations";
 import AdminSettings from "./pages/admin/Settings";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 0,
+      gcTime: 0,
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
+      refetchOnMount: "always",
+    },
+  },
+});
+
+// Handle 404.html redirect for SPA on static hosting
+function RedirectHandler() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  useEffect(() => {
+    const redirect = searchParams.get("redirect");
+    if (redirect) {
+      navigate(decodeURIComponent(redirect), { replace: true });
+    }
+  }, [searchParams, navigate]);
+  
+  return null;
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
-      <DoctorProvider>
-        <ThemeProvider>
-          <AuthProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
+      <BrowserRouter>
+        <DoctorProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <RedirectHandler />
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<Auth />} />
@@ -58,13 +85,13 @@ const App = () => (
                   <Route path="/admin/consultations" element={<AdminConsultations />} />
                   <Route path="/admin/settings" element={<AdminSettings />} />
                   
-                  <Route path="*" element={<NotFound />} />
+                <Route path="*" element={<NotFound />} />
                 </Routes>
-              </BrowserRouter>
-            </TooltipProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </DoctorProvider>
+              </TooltipProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </DoctorProvider>
+      </BrowserRouter>
     </LanguageProvider>
   </QueryClientProvider>
 );

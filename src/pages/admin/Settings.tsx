@@ -18,6 +18,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 import {
   Card,
   CardContent,
@@ -246,17 +247,17 @@ export default function AdminSettings() {
     accent_color: "#E8655A",
   });
 
-  // Sync state with loaded data
+  // Sync state with loaded data — merge with defaults so missing fields get initial values
   useEffect(() => {
-    if (doctorProfileData) setDoctor(doctorProfileData);
+    if (doctorProfileData) setDoctor({ ...defaultDoctor, ...doctorProfileData });
   }, [doctorProfileData]);
 
   useEffect(() => {
-    if (heroContentData) setHero(heroContentData);
+    if (heroContentData) setHero({ ...defaultHero, ...heroContentData });
   }, [heroContentData]);
 
   useEffect(() => {
-    if (servicesContentData) setServices(servicesContentData);
+    if (servicesContentData) setServices({ ...defaultServices, ...servicesContentData });
   }, [servicesContentData]);
 
   useEffect(() => {
@@ -282,21 +283,39 @@ export default function AdminSettings() {
         .maybeSingle();
 
       if (existing) {
-        // Update existing record
-        const { error } = await supabase
+        // Update existing record and return updated row to verify
+        const { data, error } = await supabase
           .from("site_settings")
           .update({ value: value as unknown as Json })
           .eq("key", key)
-          .eq("doctor_id", doctorId);
+          .eq("doctor_id", doctorId)
+          .select();
         if (error) throw error;
+        if (!data || data.length === 0) {
+          throw new Error("Update failed — no rows were affected. Please check your permissions.");
+        }
       } else {
         // Insert new record
+<<<<<<< HEAD
         const { error } = await supabase.from("site_settings").insert({
           key,
           value: value as unknown as Json,
           doctor_id: doctorId,
         });
+=======
+        const { data, error } = await supabase
+          .from("site_settings")
+          .insert({
+            key,
+            value: value as unknown as Json,
+            doctor_id: doctorId,
+          })
+          .select();
+>>>>>>> abd6b352df8a3a294a9d196a1e2ac96279e5c3af
         if (error) throw error;
+        if (!data || data.length === 0) {
+          throw new Error("Insert failed — no rows were created. Please check your permissions.");
+        }
       }
     },
     onSuccess: (_, { key }) => {
@@ -308,7 +327,7 @@ export default function AdminSettings() {
     },
     onError: (error) => {
       console.error("Save error:", error);
-      toast.error(t("admin.errorSaving"));
+      toast.error(error.message || t("admin.errorSaving"));
     },
   });
 
@@ -540,6 +559,7 @@ export default function AdminSettings() {
                     </div>
                     <div className="space-y-2">
                       <Label>{t("admin.imageUrl")}</Label>
+<<<<<<< HEAD
                       <div className="flex items-center space-x-4">
                         {doctor.image_url && (
                           <img
@@ -578,8 +598,14 @@ export default function AdminSettings() {
                         value={doctor.image_url || ""}
                         onChange={(e) =>
                           setDoctor({ ...doctor, image_url: e.target.value })
+=======
+                      <ImageUpload
+                        value={doctor.image_url}
+                        onChange={(url) =>
+                          setDoctor({ ...doctor, image_url: url })
+>>>>>>> abd6b352df8a3a294a9d196a1e2ac96279e5c3af
                         }
-                        placeholder="https://..."
+                        folder="profiles"
                       />
                     </div>
                   </CardContent>
@@ -1036,6 +1062,7 @@ export default function AdminSettings() {
                   </div>
                   <div className="space-y-2 sm:col-span-2">
                     <Label>{t("admin.heroImage")}</Label>
+<<<<<<< HEAD
                     <div className="flex items-center space-x-4">
                       {hero.image_url && (
                         <img
@@ -1074,8 +1101,14 @@ export default function AdminSettings() {
                       value={hero.image_url || ""}
                       onChange={(e) =>
                         setHero({ ...hero, image_url: e.target.value })
+=======
+                    <ImageUpload
+                      value={hero.image_url}
+                      onChange={(url) =>
+                        setHero({ ...hero, image_url: url })
+>>>>>>> abd6b352df8a3a294a9d196a1e2ac96279e5c3af
                       }
-                      placeholder="https://..."
+                      folder="hero"
                     />
                   </div>
                 </CardContent>

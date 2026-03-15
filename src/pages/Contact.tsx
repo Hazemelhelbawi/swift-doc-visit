@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/layout/Layout";
 import { useDoctorProfile } from "@/hooks/useSiteSettings";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useDoctor } from "@/contexts/DoctorContext";
 
 const contactSchema = z.object({
   full_name: z.string().min(2, "Name must be at least 2 characters"),
@@ -34,6 +35,7 @@ type ContactFormValues = z.infer<typeof contactSchema>;
 const Contact = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { doctorId } = useDoctor();
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const form = useForm<ContactFormValues>({
@@ -47,11 +49,13 @@ const Contact = () => {
 
   const { mutate: submitRequest, isPending } = useMutation({
     mutationFn: async (values: ContactFormValues) => {
+      if (!doctorId) throw new Error("No doctor context");
       const { error } = await supabase.from("consultation_requests").insert([
         {
           full_name: values.full_name,
           phone: values.phone,
           message: values.message || null,
+          doctor_id: doctorId,
         },
       ]);
       if (error) throw error;
@@ -277,7 +281,7 @@ const Contact = () => {
                   <span className="font-medium text-foreground">
                     {t("contact.info.emergency")}:{" "}
                   </span>
-                  <span dir="ltr">+1 (555) 911-1234</span>
+                  <span dir="ltr">{doctorProfile?.contact_phone || "+1 (555) 911-1234"}</span>
                 </p>
               </div>
             </motion.div>

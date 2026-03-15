@@ -140,7 +140,7 @@ export type Database = {
       consultation_requests: {
         Row: {
           created_at: string
-          doctor_id: string | null
+          doctor_id: string
           full_name: string
           id: string
           message: string | null
@@ -150,7 +150,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          doctor_id?: string | null
+          doctor_id: string
           full_name: string
           id?: string
           message?: string | null
@@ -160,7 +160,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          doctor_id?: string | null
+          doctor_id?: string
           full_name?: string
           id?: string
           message?: string | null
@@ -372,6 +372,17 @@ export type Database = {
           schedule_date: string
           schedule_id: string
           start_time: string
+        }[]
+      }
+      get_doctor_by_slug: {
+        Args: { p_slug: string }
+        Returns: {
+          created_at: string
+          id: string
+          is_active: boolean
+          slug: string
+          updated_at: string
+          user_id: string
         }[]
       }
       get_doctor_id_for_user: { Args: { _user_id: string }; Returns: string }
