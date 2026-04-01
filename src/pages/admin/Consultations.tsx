@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import type { Database } from '@/integrations/supabase/types';
 import { useDoctor } from '@/contexts/DoctorContext';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 type ConsultationStatus = Database['public']['Enums']['consultation_status'];
 
