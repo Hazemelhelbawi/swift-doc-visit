@@ -19,6 +19,11 @@ export default function AdminDashboard() {
   const { buildPath } = useDoctorSlug();
   useSeedDoctorDefaults();
 
+  useRealtimeSubscription('appointments', [['admin-stats', doctorId ?? ''], ['recent-appointments', doctorId ?? '']], !!doctorId);
+  useRealtimeSubscription('clinics', [['admin-stats', doctorId ?? '']], !!doctorId);
+  useRealtimeSubscription('schedules', [['admin-stats', doctorId ?? '']], !!doctorId);
+  useRealtimeSubscription('consultation_requests', [['admin-stats', doctorId ?? '']], !!doctorId);
+
   const { data: stats } = useQuery({
     queryKey: ['admin-stats', doctorId],
     queryFn: async () => {
