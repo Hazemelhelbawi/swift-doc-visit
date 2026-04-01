@@ -13,6 +13,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { ScheduleForm } from '@/components/admin/ScheduleForm';
 import { ScheduleCard } from '@/components/admin/ScheduleCard';
 import { useDoctor } from '@/contexts/DoctorContext';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 interface Schedule {
   id: string;
