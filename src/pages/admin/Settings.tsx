@@ -104,6 +104,13 @@ export default function AdminSettings() {
   const queryClient = useQueryClient();
   const { doctorId } = useDoctor();
 
+  useRealtimeSubscription('site_settings', [
+    ['site-settings', 'doctor_profile', doctorId ?? ''],
+    ['site-settings', 'hero_content', doctorId ?? ''],
+    ['site-settings', 'services', doctorId ?? ''],
+    ['site-settings', 'theme_settings', doctorId ?? ''],
+  ], !!doctorId);
+
   // Fetch data with doctor_id filter
   const { data: doctorProfileData, isLoading: loadingDoctor } = useQuery({
     queryKey: ["site-settings", "doctor_profile", doctorId],
