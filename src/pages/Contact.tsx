@@ -78,6 +78,7 @@ const Contact = () => {
   });
 
   const onSubmit = (values: ContactFormValues) => {
+    if (honeypot) return; // Bot detected
     submitRequest(values);
   };
 
