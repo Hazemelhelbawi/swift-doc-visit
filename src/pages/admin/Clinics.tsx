@@ -14,6 +14,7 @@ import { Plus, Pencil, Trash2, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useDoctor } from '@/contexts/DoctorContext';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 interface Clinic {
   id: string;
