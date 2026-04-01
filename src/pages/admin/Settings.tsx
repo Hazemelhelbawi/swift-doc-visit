@@ -33,6 +33,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useDoctor } from "@/contexts/DoctorContext";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 interface Education {
   degree: string;
