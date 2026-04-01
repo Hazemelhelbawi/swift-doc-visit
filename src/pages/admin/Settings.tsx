@@ -33,6 +33,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useDoctor } from "@/contexts/DoctorContext";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 interface Education {
   degree: string;
@@ -102,6 +103,13 @@ export default function AdminSettings() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { doctorId } = useDoctor();
+
+  useRealtimeSubscription('site_settings', [
+    ['site-settings', 'doctor_profile', doctorId ?? ''],
+    ['site-settings', 'hero_content', doctorId ?? ''],
+    ['site-settings', 'services', doctorId ?? ''],
+    ['site-settings', 'theme_settings', doctorId ?? ''],
+  ], !!doctorId);
 
   // Fetch data with doctor_id filter
   const { data: doctorProfileData, isLoading: loadingDoctor } = useQuery({

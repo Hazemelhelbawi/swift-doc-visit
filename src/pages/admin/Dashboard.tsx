@@ -11,12 +11,18 @@ import { format, parseISO } from 'date-fns';
 import { useDoctor } from '@/contexts/DoctorContext';
 import { useDoctorSlug } from '@/hooks/useDoctorSlug';
 import { useSeedDoctorDefaults } from '@/hooks/useSeedDoctorDefaults';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 export default function AdminDashboard() {
   const { t } = useTranslation();
   const { doctorId } = useDoctor();
   const { buildPath } = useDoctorSlug();
   useSeedDoctorDefaults();
+
+  useRealtimeSubscription('appointments', [['admin-stats', doctorId ?? ''], ['recent-appointments', doctorId ?? '']], !!doctorId);
+  useRealtimeSubscription('clinics', [['admin-stats', doctorId ?? '']], !!doctorId);
+  useRealtimeSubscription('schedules', [['admin-stats', doctorId ?? '']], !!doctorId);
+  useRealtimeSubscription('consultation_requests', [['admin-stats', doctorId ?? '']], !!doctorId);
 
   const { data: stats } = useQuery({
     queryKey: ['admin-stats', doctorId],

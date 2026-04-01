@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import type { Database } from '@/integrations/supabase/types';
 import { useDoctor } from '@/contexts/DoctorContext';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 type ConsultationStatus = Database['public']['Enums']['consultation_status'];
 
@@ -27,6 +28,8 @@ export default function AdminConsultations() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { doctorId } = useDoctor();
+
+  useRealtimeSubscription('consultation_requests', [['admin-consultations', doctorId ?? '']], !!doctorId);
 
   const { data: consultations, isLoading } = useQuery({
     queryKey: ['admin-consultations', doctorId],

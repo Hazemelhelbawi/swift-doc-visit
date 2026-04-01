@@ -14,6 +14,7 @@ import { Plus, Pencil, Trash2, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useDoctor } from '@/contexts/DoctorContext';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 interface Clinic {
   id: string;
@@ -34,6 +35,7 @@ export default function AdminClinics() {
   const { language } = useLanguage();
   const queryClient = useQueryClient();
   const { doctorId } = useDoctor();
+  useRealtimeSubscription('clinics', [['admin-clinics', doctorId ?? '']], !!doctorId);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClinic, setEditingClinic] = useState<Clinic | null>(null);
   const [formData, setFormData] = useState({

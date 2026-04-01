@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useDoctor } from "@/contexts/DoctorContext";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import type { Database } from "@/integrations/supabase/types";
 
 type AppointmentStatus = Database["public"]["Enums"]["appointment_status"];
@@ -47,6 +48,8 @@ export default function AdminAppointments() {
   const { language } = useLanguage();
   const queryClient = useQueryClient();
   const { doctorId } = useDoctor();
+
+  useRealtimeSubscription('appointments', [['admin-appointments', doctorId ?? ''], ['admin-stats', doctorId ?? '']], !!doctorId);
 
   const { data: appointments, isLoading } = useQuery({
     queryKey: ["admin-appointments", doctorId],
