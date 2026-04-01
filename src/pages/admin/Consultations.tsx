@@ -29,6 +29,8 @@ export default function AdminConsultations() {
   const queryClient = useQueryClient();
   const { doctorId } = useDoctor();
 
+  useRealtimeSubscription('consultation_requests', [['admin-consultations', doctorId ?? '']], !!doctorId);
+
   const { data: consultations, isLoading } = useQuery({
     queryKey: ['admin-consultations', doctorId],
     queryFn: async () => {
