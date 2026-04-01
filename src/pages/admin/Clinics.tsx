@@ -35,6 +35,7 @@ export default function AdminClinics() {
   const { language } = useLanguage();
   const queryClient = useQueryClient();
   const { doctorId } = useDoctor();
+  useRealtimeSubscription('clinics', [['admin-clinics', doctorId ?? '']], !!doctorId);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClinic, setEditingClinic] = useState<Clinic | null>(null);
   const [formData, setFormData] = useState({

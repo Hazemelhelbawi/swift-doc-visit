@@ -54,6 +54,7 @@ export default function AdminSchedules() {
   const { language } = useLanguage();
   const queryClient = useQueryClient();
   const { doctorId } = useDoctor();
+  useRealtimeSubscription('schedules', [['admin-schedules', doctorId ?? '']], !!doctorId);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
   const [filterClinic, setFilterClinic] = useState<string>('all');
