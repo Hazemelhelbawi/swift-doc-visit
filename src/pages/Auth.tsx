@@ -86,10 +86,10 @@ const Auth = () => {
         });
       }
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      console.error("Auth error:", error);
       toast({
         title: t("common.error"),
-        description: message,
+        description: t("common.unexpectedError", "Something went wrong. Please try again."),
         variant: "destructive",
       });
     } finally {

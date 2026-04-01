@@ -37,6 +37,7 @@ const Contact = () => {
   const { toast } = useToast();
   const { doctorId } = useDoctor();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [honeypot, setHoneypot] = useState("");
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
@@ -77,6 +78,7 @@ const Contact = () => {
   });
 
   const onSubmit = (values: ContactFormValues) => {
+    if (honeypot) return; // Bot detected
     submitRequest(values);
   };
 
@@ -177,6 +179,16 @@ const Contact = () => {
                       onSubmit={form.handleSubmit(onSubmit)}
                       className="space-y-6"
                     >
+                      {/* Honeypot field - hidden from real users */}
+                      <input
+                        type="text"
+                        name="website"
+                        value={honeypot}
+                        onChange={(e) => setHoneypot(e.target.value)}
+                        style={{ display: 'none' }}
+                        tabIndex={-1}
+                        autoComplete="off"
+                      />
                       <FormField
                         control={form.control}
                         name="full_name"

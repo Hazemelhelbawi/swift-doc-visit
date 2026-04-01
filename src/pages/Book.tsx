@@ -191,9 +191,10 @@ const Book = () => {
       });
     },
     onError: (error) => {
+      console.error("Booking error:", error);
       toast({
         title: t('common.error'),
-        description: error.message,
+        description: t('booking.bookingFailed', 'Failed to book appointment. Please try again.'),
         variant: 'destructive',
       });
     },
