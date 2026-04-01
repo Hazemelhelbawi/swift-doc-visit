@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useDoctor } from "@/contexts/DoctorContext";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import type { Database } from "@/integrations/supabase/types";
 
 type AppointmentStatus = Database["public"]["Enums"]["appointment_status"];
