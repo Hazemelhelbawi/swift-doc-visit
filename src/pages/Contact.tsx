@@ -37,6 +37,7 @@ const Contact = () => {
   const { toast } = useToast();
   const { doctorId } = useDoctor();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [honeypot, setHoneypot] = useState("");
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
