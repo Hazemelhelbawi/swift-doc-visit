@@ -11,6 +11,7 @@ import { format, parseISO } from 'date-fns';
 import { useDoctor } from '@/contexts/DoctorContext';
 import { useDoctorSlug } from '@/hooks/useDoctorSlug';
 import { useSeedDoctorDefaults } from '@/hooks/useSeedDoctorDefaults';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 export default function AdminDashboard() {
   const { t } = useTranslation();
