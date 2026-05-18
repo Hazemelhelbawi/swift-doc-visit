@@ -1,40 +1,56 @@
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useDoctor } from '@/contexts/DoctorContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { getSlugFromPath } from '@/lib/reservedPaths';
 
 const DOCTOR_SLUG_KEY = 'active_doctor_slug';
 
 /**
- * Returns the current doctor slug from URL params, sessionStorage, or context.
- * Persists the slug in sessionStorage so it survives across navigations.
+ * Returns the current doctor slug from the URL path, sessionStorage, or context.
+ * Builds clean URLs prefixed with the slug, e.g. /dr-ahmed-ali/book.
  */
 export function useDoctorSlug() {
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { doctor } = useDoctor();
   const { user } = useAuth();
-  
-  const paramSlug = searchParams.get('doctor');
-  
-  // If URL has doctor param, persist it
-  if (paramSlug) {
-    sessionStorage.setItem(DOCTOR_SLUG_KEY, paramSlug);
-  }
-  
-  // Priority: URL param > sessionStorage > logged-in doctor context
-  const doctorSlug = paramSlug || sessionStorage.getItem(DOCTOR_SLUG_KEY) || doctor?.slug;
-  
-  // Check if the current logged-in user IS the doctor (not just if doctor has a user_id)
-  const isLoggedInDoctor = !!(user && doctor?.user_id && user.id === doctor.user_id);
-  
-  // Helper to build a path with the doctor param preserved
-  const buildPath = (path: string) => {
-    if (!doctorSlug || isLoggedInDoctor) {
-      // If logged-in as this doctor, no need for query param
-      return path;
+
+  const pathSlug = getSlugFromPath(location.pathname);
+
+  // Legacy: support ?doctor=slug links by redirecting to /:slug
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const legacy = params.get('doctor');
+    if (legacy && !pathSlug) {
+      params.delete('doctor');
+      const rest = params.toString();
+      const target = `/${legacy.toLowerCase()}${location.pathname === '/' ? '' : location.pathname}${rest ? `?${rest}` : ''}`;
+      navigate(target, { replace: true });
     }
-    const separator = path.includes('?') ? '&' : '?';
-    return `${path}${separator}doctor=${doctorSlug}`;
+  }, [location.pathname, location.search, pathSlug, navigate]);
+
+  if (pathSlug) {
+    sessionStorage.setItem(DOCTOR_SLUG_KEY, pathSlug);
+  }
+
+  const doctorSlug =
+    pathSlug || sessionStorage.getItem(DOCTOR_SLUG_KEY) || doctor?.slug || null;
+
+  const isLoggedInDoctor = !!(user && doctor?.user_id && user.id === doctor.user_id);
+
+  /**
+   * Build a path prefixed with the active doctor slug.
+   * `path` should start with "/" (e.g. "/book", "/about").
+   */
+  const buildPath = (path: string) => {
+    const clean = path.startsWith('/') ? path : `/${path}`;
+    if (!doctorSlug) return clean;
+    // For logged-in doctors visiting their own admin, still emit slug-prefixed
+    // public URLs so canonical/SEO links stay consistent.
+    if (clean === '/') return `/${doctorSlug}`;
+    return `/${doctorSlug}${clean}`;
   };
-  
-  return { doctorSlug, buildPath };
+
+  return { doctorSlug, buildPath, isLoggedInDoctor };
 }
