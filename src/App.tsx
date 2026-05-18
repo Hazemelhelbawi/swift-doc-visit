@@ -3,11 +3,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useNavigate, useSearchParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useSearchParams, useLocation, useParams } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import { DoctorProvider } from "@/contexts/DoctorContext";
+import { DoctorProvider, useDoctor } from "@/contexts/DoctorContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { isReservedSegment } from "@/lib/reservedPaths";
 import "@/i18n";
 
 import Index from "./pages/Index";
@@ -40,19 +41,49 @@ const queryClient = new QueryClient({
   },
 });
 
-// Handle 404.html redirect for SPA on static hosting
-function RedirectHandler() {
+/**
+ * Handles SPA 404 redirects and legacy ?doctor=slug links.
+ * Converts ?doctor=ahmed → /ahmed.
+ */
+function LegacyRedirectHandler() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
-  
+
   useEffect(() => {
+    // 404.html fallback redirect
     const redirect = searchParams.get("redirect");
     if (redirect) {
       navigate(decodeURIComponent(redirect), { replace: true });
+      return;
     }
-  }, [searchParams, navigate]);
-  
+
+    // Legacy ?doctor=slug → /slug
+    const legacy = searchParams.get("doctor");
+    if (legacy) {
+      const params = new URLSearchParams(location.search);
+      params.delete("doctor");
+      const rest = params.toString();
+      const currentPath = location.pathname === "/" ? "" : location.pathname;
+      const target = `/${legacy.toLowerCase()}${currentPath}${rest ? `?${rest}` : ""}`;
+      navigate(target, { replace: true });
+    }
+  }, [searchParams, navigate, location.pathname, location.search]);
+
   return null;
+}
+
+/**
+ * Guards the /:slug/* routes: if the segment is reserved, render NotFound.
+ */
+function SlugGuard({ children }: { children: React.ReactNode }) {
+  const { slug } = useParams<{ slug: string }>();
+  const { isLoading, notFound, doctor } = useDoctor();
+
+  if (slug && isReservedSegment(slug)) return <NotFound />;
+  if (isLoading) return null;
+  if (notFound || !doctor) return <NotFound />;
+  return <>{children}</>;
 }
 
 const App = () => (
@@ -65,18 +96,15 @@ const App = () => (
               <TooltipProvider>
                 <Toaster />
                 <Sonner />
-                <RedirectHandler />
+                <LegacyRedirectHandler />
                 <Routes>
+                  {/* Root: default doctor landing */}
                   <Route path="/" element={<Index />} />
+
+                  {/* Auth */}
                   <Route path="/auth" element={<Auth />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/services" element={<Services />} />
-                  <Route path="/clinics" element={<Clinics />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/book" element={<Book />} />
-                  <Route path="/my-appointments" element={<MyAppointments />} />
-                  
-                  {/* Admin Routes */}
+
+                  {/* Admin (auth-gated inside pages) */}
                   <Route path="/dashboard" element={<AdminDashboard />} />
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/admin/clinics" element={<AdminClinics />} />
@@ -84,8 +112,17 @@ const App = () => (
                   <Route path="/admin/appointments" element={<AdminAppointments />} />
                   <Route path="/admin/consultations" element={<AdminConsultations />} />
                   <Route path="/admin/settings" element={<AdminSettings />} />
-                  
-                <Route path="*" element={<NotFound />} />
+
+                  {/* Public per-doctor pages: /:slug, /:slug/about, etc. */}
+                  <Route path="/:slug" element={<SlugGuard><Index /></SlugGuard>} />
+                  <Route path="/:slug/about" element={<SlugGuard><About /></SlugGuard>} />
+                  <Route path="/:slug/services" element={<SlugGuard><Services /></SlugGuard>} />
+                  <Route path="/:slug/clinics" element={<SlugGuard><Clinics /></SlugGuard>} />
+                  <Route path="/:slug/contact" element={<SlugGuard><Contact /></SlugGuard>} />
+                  <Route path="/:slug/book" element={<SlugGuard><Book /></SlugGuard>} />
+                  <Route path="/:slug/my-appointments" element={<SlugGuard><MyAppointments /></SlugGuard>} />
+
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </TooltipProvider>
             </AuthProvider>
