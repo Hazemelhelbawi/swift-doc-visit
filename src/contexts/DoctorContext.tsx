@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getSlugFromPath } from "@/lib/reservedPaths";
 
 interface Doctor {
   id: string;
@@ -15,6 +16,7 @@ interface DoctorContextType {
   doctorId: string | null;
   isLoading: boolean;
   error: string | null;
+  notFound: boolean;
 }
 
 const DoctorContext = createContext<DoctorContextType | undefined>(undefined);
@@ -27,93 +29,89 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchParams] = useSearchParams();
+  const [notFound, setNotFound] = useState(false);
+  const location = useLocation();
 
-  // Get slug from URL param reactively
-  const doctorParam = searchParams.get("doctor");
+  // Get slug from URL path (clean URLs like /dr-ahmed-ali) or legacy query param.
+  const pathSlug = getSlugFromPath(location.pathname);
+  const querySlug = new URLSearchParams(location.search).get("doctor");
+  const urlSlug = pathSlug || querySlug;
 
   // Persist slug in sessionStorage
   useEffect(() => {
-    if (doctorParam) {
-      sessionStorage.setItem(DOCTOR_SLUG_KEY, doctorParam);
-    }
-  }, [doctorParam]);
+    if (urlSlug) sessionStorage.setItem(DOCTOR_SLUG_KEY, urlSlug.toLowerCase());
+  }, [urlSlug]);
 
-  // Resolve the effective slug: URL param > sessionStorage > subdomain > default
-  const resolveSlug = (): string => {
-    if (doctorParam) return doctorParam;
-
+  const resolveSlug = (): string | null => {
+    if (urlSlug) return urlSlug.toLowerCase();
     const stored = sessionStorage.getItem(DOCTOR_SLUG_KEY);
     if (stored) return stored;
-
     const hostname = window.location.hostname;
     const parts = hostname.split(".");
     const isPreviewOrLocal =
       hostname.includes("localhost") ||
       hostname.includes("lovable") ||
       hostname.includes("lovableproject") ||
-      hostname.includes("vercel") ||
-      hostname.includes("vercel.app");
-    if (parts.length >= 3 && !isPreviewOrLocal) {
-      return parts[0];
-    }
-
-    return "default";
+      hostname.includes("vercel");
+    if (parts.length >= 3 && !isPreviewOrLocal) return parts[0].toLowerCase();
+    return null;
   };
 
   useEffect(() => {
     const loadDoctor = async () => {
       try {
         setError(null);
+        setNotFound(false);
         const slug = resolveSlug();
 
-        // Accept any incoming slug: try to load doctor by it first (automatic merge with URL/session)
-        const { data: doctorBySlug, error: slugError } = await supabase
-          .from("doctors")
-          .select("id, slug, user_id, is_active")
-          .eq("slug", slug)
-          .eq("is_active", true)
-          .maybeSingle();
+        if (slug) {
+          const { data: doctorBySlug } = await supabase
+            .from("doctors")
+            .select("id, slug, user_id, is_active")
+            .eq("slug", slug)
+            .eq("is_active", true)
+            .maybeSingle();
 
-        if (!slugError && doctorBySlug) {
-          setDoctor(doctorBySlug);
-          setIsLoading(false);
-          return;
+          if (doctorBySlug) {
+            setDoctor(doctorBySlug);
+            setIsLoading(false);
+            return;
+          }
+          // Slug was in URL but doesn't match a doctor
+          if (pathSlug) {
+            setNotFound(true);
+            setIsLoading(false);
+            return;
+          }
         }
 
-        // No doctor for incoming slug: fall back to logged-in user's doctor
+        // Fall back to the logged-in user's own doctor record
         const {
           data: { user },
         } = await supabase.auth.getUser();
-
         if (user) {
-          const { data: userDoctor, error: doctorError } = await supabase
+          const { data: userDoctor } = await supabase
             .from("doctors")
             .select("id, slug, user_id, is_active")
             .eq("user_id", user.id)
             .eq("is_active", true)
             .maybeSingle();
-
-          if (!doctorError && userDoctor) {
+          if (userDoctor) {
             setDoctor(userDoctor);
             setIsLoading(false);
             return;
           }
         }
 
-        // Fallback to default doctor when slug not found and no logged-in doctor
+        // Final fallback: default doctor
         const { data: defaultDoctor } = await supabase
           .from("doctors")
           .select("id, slug, user_id, is_active")
           .eq("slug", "default")
           .eq("is_active", true)
           .maybeSingle();
-
-        if (defaultDoctor) {
-          setDoctor(defaultDoctor);
-        } else {
-          setError("No doctor found");
-        }
+        if (defaultDoctor) setDoctor(defaultDoctor);
+        else setDoctor(null);
       } catch (err) {
         console.error("Error loading doctor:", err);
         setError("Failed to load doctor");
@@ -122,19 +120,15 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     };
 
-    // Listen for auth state changes to reload doctor context
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
-        loadDoctor();
-      }
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") loadDoctor();
     });
 
     loadDoctor();
-
     return () => subscription.unsubscribe();
-  }, [doctorParam]); // Re-run when URL doctor param changes
+  }, [urlSlug, pathSlug]);
 
   return (
     <DoctorContext.Provider
@@ -143,6 +137,7 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({
         doctorId: doctor?.id || null,
         isLoading,
         error,
+        notFound,
       }}
     >
       {children}
