@@ -1,5 +1,4 @@
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useDoctor } from '@/contexts/DoctorContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSlugFromPath } from '@/lib/reservedPaths';
@@ -12,23 +11,10 @@ const DOCTOR_SLUG_KEY = 'active_doctor_slug';
  */
 export function useDoctorSlug() {
   const location = useLocation();
-  const navigate = useNavigate();
   const { doctor } = useDoctor();
   const { user } = useAuth();
 
   const pathSlug = getSlugFromPath(location.pathname);
-
-  // Legacy: support ?doctor=slug links by redirecting to /:slug
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const legacy = params.get('doctor');
-    if (legacy && !pathSlug) {
-      params.delete('doctor');
-      const rest = params.toString();
-      const target = `/${legacy.toLowerCase()}${location.pathname === '/' ? '' : location.pathname}${rest ? `?${rest}` : ''}`;
-      navigate(target, { replace: true });
-    }
-  }, [location.pathname, location.search, pathSlug, navigate]);
 
   if (pathSlug) {
     sessionStorage.setItem(DOCTOR_SLUG_KEY, pathSlug);
@@ -42,12 +28,19 @@ export function useDoctorSlug() {
   /**
    * Build a path prefixed with the active doctor slug.
    * `path` should start with "/" (e.g. "/book", "/about").
+   * Admin paths (/admin, /dashboard, /auth) are returned unprefixed.
    */
   const buildPath = (path: string) => {
     const clean = path.startsWith('/') ? path : `/${path}`;
+    // Don't prefix admin/auth/dashboard paths
+    if (
+      clean === '/dashboard' ||
+      clean.startsWith('/admin') ||
+      clean.startsWith('/auth')
+    ) {
+      return clean;
+    }
     if (!doctorSlug) return clean;
-    // For logged-in doctors visiting their own admin, still emit slug-prefixed
-    // public URLs so canonical/SEO links stay consistent.
     if (clean === '/') return `/${doctorSlug}`;
     return `/${doctorSlug}${clean}`;
   };
