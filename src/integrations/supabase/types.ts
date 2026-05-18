@@ -362,6 +362,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_unique_doctor_slug: { Args: { _base: string }; Returns: string }
       get_available_schedules: {
         Args: { p_clinic_id: string; p_end_date: string; p_start_date: string }
         Returns: {
@@ -402,6 +403,7 @@ export type Database = {
         Returns: boolean
       }
       is_superadmin: { Args: { _user_id: string }; Returns: boolean }
+      slugify: { Args: { _text: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "user"

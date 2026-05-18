@@ -1,40 +1,49 @@
-import { useSearchParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useDoctor } from '@/contexts/DoctorContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { getSlugFromPath } from '@/lib/reservedPaths';
 
 const DOCTOR_SLUG_KEY = 'active_doctor_slug';
 
 /**
- * Returns the current doctor slug from URL params, sessionStorage, or context.
- * Persists the slug in sessionStorage so it survives across navigations.
+ * Returns the current doctor slug from the URL path, sessionStorage, or context.
+ * Builds clean URLs prefixed with the slug, e.g. /dr-ahmed-ali/book.
  */
 export function useDoctorSlug() {
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const { doctor } = useDoctor();
   const { user } = useAuth();
-  
-  const paramSlug = searchParams.get('doctor');
-  
-  // If URL has doctor param, persist it
-  if (paramSlug) {
-    sessionStorage.setItem(DOCTOR_SLUG_KEY, paramSlug);
+
+  const pathSlug = getSlugFromPath(location.pathname);
+
+  if (pathSlug) {
+    sessionStorage.setItem(DOCTOR_SLUG_KEY, pathSlug);
   }
-  
-  // Priority: URL param > sessionStorage > logged-in doctor context
-  const doctorSlug = paramSlug || sessionStorage.getItem(DOCTOR_SLUG_KEY) || doctor?.slug;
-  
-  // Check if the current logged-in user IS the doctor (not just if doctor has a user_id)
+
+  const doctorSlug =
+    pathSlug || sessionStorage.getItem(DOCTOR_SLUG_KEY) || doctor?.slug || null;
+
   const isLoggedInDoctor = !!(user && doctor?.user_id && user.id === doctor.user_id);
-  
-  // Helper to build a path with the doctor param preserved
+
+  /**
+   * Build a path prefixed with the active doctor slug.
+   * `path` should start with "/" (e.g. "/book", "/about").
+   * Admin paths (/admin, /dashboard, /auth) are returned unprefixed.
+   */
   const buildPath = (path: string) => {
-    if (!doctorSlug || isLoggedInDoctor) {
-      // If logged-in as this doctor, no need for query param
-      return path;
+    const clean = path.startsWith('/') ? path : `/${path}`;
+    // Don't prefix admin/auth/dashboard paths
+    if (
+      clean === '/dashboard' ||
+      clean.startsWith('/admin') ||
+      clean.startsWith('/auth')
+    ) {
+      return clean;
     }
-    const separator = path.includes('?') ? '&' : '?';
-    return `${path}${separator}doctor=${doctorSlug}`;
+    if (!doctorSlug) return clean;
+    if (clean === '/') return `/${doctorSlug}`;
+    return `/${doctorSlug}${clean}`;
   };
-  
-  return { doctorSlug, buildPath };
+
+  return { doctorSlug, buildPath, isLoggedInDoctor };
 }
