@@ -20,6 +20,7 @@ import Contact from "./pages/Contact";
 import Book from "./pages/Book";
 import MyAppointments from "./pages/MyAppointments";
 import NotFound from "./pages/NotFound";
+import Pricing from "./pages/Pricing";
 
 // Admin pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -28,6 +29,8 @@ import AdminSchedules from "./pages/admin/Schedules";
 import AdminAppointments from "./pages/admin/Appointments";
 import AdminConsultations from "./pages/admin/Consultations";
 import AdminSettings from "./pages/admin/Settings";
+import AdminBilling from "./pages/admin/Billing";
+import AdminSubscriptions from "./pages/admin/Subscriptions";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -103,6 +106,7 @@ const App = () => (
 
                   {/* Auth */}
                   <Route path="/auth" element={<Auth />} />
+                  <Route path="/pricing" element={<Pricing />} />
 
                   {/* Admin (auth-gated inside pages) */}
                   <Route path="/dashboard" element={<AdminDashboard />} />
@@ -111,6 +115,8 @@ const App = () => (
                   <Route path="/admin/schedules" element={<AdminSchedules />} />
                   <Route path="/admin/appointments" element={<AdminAppointments />} />
                   <Route path="/admin/consultations" element={<AdminConsultations />} />
+                  <Route path="/admin/billing" element={<AdminBilling />} />
+                  <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
                   <Route path="/admin/settings" element={<AdminSettings />} />
 
                   {/* Public per-doctor pages: /:slug, /:slug/about, etc. */}

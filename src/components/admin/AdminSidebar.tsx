@@ -8,7 +8,12 @@ import {
   ChevronRight,
   Home,
   Settings,
+  CreditCard,
+  Crown,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { NavLink } from "@/components/NavLink";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -33,8 +38,21 @@ export function AdminSidebar() {
   const { language } = useLanguage();
   const { state, toggleSidebar } = useSidebar();
   const { buildPath } = useDoctorSlug();
+  const { user } = useAuth();
   const collapsed = state === "collapsed";
   const isRTL = language === "ar";
+
+  const { data: isSuper } = useQuery({
+    queryKey: ["is-superadmin", user?.id],
+    queryFn: async () => {
+      if (!user) return false;
+      const { data } = await supabase.rpc("is_superadmin", {
+        _user_id: user.id,
+      });
+      return !!data;
+    },
+    enabled: !!user,
+  });
 
   const menuItems = [
     { title: t("admin.dashboard"), url: "/admin", icon: LayoutDashboard },
@@ -50,7 +68,21 @@ export function AdminSidebar() {
       url: "/admin/consultations",
       icon: MessageSquare,
     },
+    {
+      title: isRTL ? "الفواتير" : "Billing",
+      url: "/admin/billing",
+      icon: CreditCard,
+    },
     { title: t("admin.settings"), url: "/admin/settings", icon: Settings },
+    ...(isSuper
+      ? [
+          {
+            title: isRTL ? "الاشتراكات" : "Subscriptions",
+            url: "/admin/subscriptions",
+            icon: Crown,
+          },
+        ]
+      : []),
   ];
 
   return (

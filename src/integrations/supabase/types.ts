@@ -336,6 +336,48 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          current_period_end: string | null
+          doctor_id: string
+          id: string
+          last_payment_amount: number | null
+          last_payment_date: string | null
+          payment_method: string | null
+          status: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          doctor_id: string
+          id?: string
+          last_payment_amount?: number | null
+          last_payment_date?: string | null
+          payment_method?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          doctor_id?: string
+          id?: string
+          last_payment_amount?: number | null
+          last_payment_date?: string | null
+          payment_method?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -395,6 +437,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      has_active_subscription: {
+        Args: { _doctor_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -409,6 +455,12 @@ export type Database = {
       app_role: "admin" | "user"
       appointment_status: "pending" | "confirmed" | "cancelled"
       consultation_status: "new" | "contacted" | "closed"
+      subscription_status:
+        | "trialing"
+        | "active"
+        | "expired"
+        | "lifetime_free"
+        | "suspended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -539,6 +591,13 @@ export const Constants = {
       app_role: ["admin", "user"],
       appointment_status: ["pending", "confirmed", "cancelled"],
       consultation_status: ["new", "contacted", "closed"],
+      subscription_status: [
+        "trialing",
+        "active",
+        "expired",
+        "lifetime_free",
+        "suspended",
+      ],
     },
   },
 } as const
