@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AdminSidebar } from './AdminSidebar';
+import { SubscriptionGuard } from './SubscriptionGuard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useDoctorSlug } from '@/hooks/useDoctorSlug';
 import { Loader2 } from 'lucide-react';
@@ -45,7 +46,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <h1 className="font-semibold text-foreground">{language === 'ar' ? 'لوحة تحكم المدير' : 'Admin Dashboard'}</h1>
           </header>
           <main className="flex-1 p-6 overflow-auto">
-            {children}
+            <SubscriptionGuard>{children}</SubscriptionGuard>
           </main>
         </div>
       </div>
