@@ -12,6 +12,7 @@ import { useDoctor } from '@/contexts/DoctorContext';
 import { useDoctorSlug } from '@/hooks/useDoctorSlug';
 import { useSeedDoctorDefaults } from '@/hooks/useSeedDoctorDefaults';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { TrialBanner } from '@/components/admin/TrialBanner';
 
 export default function AdminDashboard() {
   const { t } = useTranslation();
@@ -133,6 +134,7 @@ export default function AdminDashboard() {
   return (
     <AdminLayout>
       <div className="space-y-6">
+        <TrialBanner />
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
