@@ -21,6 +21,8 @@ import Book from "./pages/Book";
 import MyAppointments from "./pages/MyAppointments";
 import NotFound from "./pages/NotFound";
 import Pricing from "./pages/Pricing";
+import MarketingHome from "./pages/MarketingHome";
+import StartTrial from "./pages/StartTrial";
 
 // Admin pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -31,6 +33,8 @@ import AdminConsultations from "./pages/admin/Consultations";
 import AdminSettings from "./pages/admin/Settings";
 import AdminBilling from "./pages/admin/Billing";
 import AdminSubscriptions from "./pages/admin/Subscriptions";
+import AdminTrialRequests from "./pages/admin/TrialRequests";
+import AdminPatients from "./pages/admin/Patients";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -101,12 +105,13 @@ const App = () => (
                 <Sonner />
                 <LegacyRedirectHandler />
                 <Routes>
-                  {/* Root: default doctor landing */}
-                  <Route path="/" element={<Index />} />
+                  {/* Root: marketing landing (no doctor data) */}
+                  <Route path="/" element={<MarketingHome />} />
 
                   {/* Auth */}
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/start-trial" element={<StartTrial />} />
 
                   {/* Admin (auth-gated inside pages) */}
                   <Route path="/dashboard" element={<AdminDashboard />} />
@@ -117,6 +122,8 @@ const App = () => (
                   <Route path="/admin/consultations" element={<AdminConsultations />} />
                   <Route path="/admin/billing" element={<AdminBilling />} />
                   <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
+                  <Route path="/admin/trial-requests" element={<AdminTrialRequests />} />
+                  <Route path="/admin/patients" element={<AdminPatients />} />
                   <Route path="/admin/settings" element={<AdminSettings />} />
 
                   {/* Public per-doctor pages: /:slug, /:slug/about, etc. */}

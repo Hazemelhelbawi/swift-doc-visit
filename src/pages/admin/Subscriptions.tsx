@@ -39,13 +39,14 @@ import type {
   Subscription,
   SubscriptionStatus,
 } from "@/hooks/useSubscription";
+import { Trash2 } from "lucide-react";
 
 interface Row {
   doctor_id: string;
   slug: string;
   email: string;
   is_active: boolean;
-  subscription: Subscription | null;
+  subscription: (Subscription & { plan_type?: "monthly" | "yearly" | null }) | null;
 }
 
 const statusVariants: Record<
@@ -146,6 +147,7 @@ export default function SubscriptionsAdminPage() {
                   <TableRow>
                     <TableHead>Doctor</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Plan</TableHead>
                     <TableHead>Ends</TableHead>
                     <TableHead>Last payment</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -182,6 +184,9 @@ export default function SubscriptionsAdminPage() {
                           ) : (
                             <Badge variant="outline">none</Badge>
                           )}
+                        </TableCell>
+                        <TableCell className="text-sm capitalize">
+                          {s?.plan_type || "—"}
                         </TableCell>
                         <TableCell className="text-sm">
                           {end ? format(new Date(end), "PP") : "—"}
@@ -308,14 +313,64 @@ function EditDialog({
     }
   };
 
+  const setPlan = async (plan: "monthly" | "yearly") => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("subscriptions")
+        .update({ plan_type: plan })
+        .eq("doctor_id", row.doctor_id)
+        .select();
+      if (error) throw error;
+      toast.success(`Plan set to ${plan}`);
+      onSaved();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const removeSub = async () => {
+    if (!confirm("Remove this subscription? Doctor's dashboard will lock until a new one is added.")) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("subscriptions")
+        .delete()
+        .eq("doctor_id", row.doctor_id);
+      if (error) throw error;
+      toast.success("Subscription removed");
+      onSaved();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <Dialog open={!!row} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Manage: {row.slug}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
+          <div className="space-y-2">
+            <Label className="text-xs uppercase text-muted-foreground">Plan</Label>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant={s?.plan_type === "monthly" ? "default" : "outline"}
+                disabled={saving} onClick={() => setPlan("monthly")}>
+                Monthly (200 LE)
+              </Button>
+              <Button size="sm" variant={s?.plan_type === "yearly" ? "default" : "outline"}
+                disabled={saving} onClick={() => setPlan("yearly")}>
+                Yearly (2000 LE)
+              </Button>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label className="text-xs uppercase text-muted-foreground">
               Mark as paid (extends subscription)
@@ -327,76 +382,54 @@ function EditDialog({
               <Button size="sm" disabled={saving} onClick={() => extend(90, 600)}>
                 +3 months (600 LE)
               </Button>
-              <Button size="sm" disabled={saving} onClick={() => extend(365, 2400)}>
-                +1 year (2400 LE)
+              <Button size="sm" disabled={saving} onClick={() => extend(365, 2000)}>
+                +1 year (2000 LE)
               </Button>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs uppercase text-muted-foreground">
-              Trial
-            </Label>
+            <Label className="text-xs uppercase text-muted-foreground">Trial</Label>
             <div className="flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={saving}
-                onClick={() => extendTrial(7)}
-              >
+              <Button size="sm" variant="outline" disabled={saving} onClick={() => extendTrial(7)}>
                 +7 trial days
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={saving}
-                onClick={() => extendTrial(30)}
-              >
+              <Button size="sm" variant="outline" disabled={saving} onClick={() => extendTrial(30)}>
                 +30 trial days
               </Button>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs uppercase text-muted-foreground">
-              Status override
-            </Label>
+            <Label className="text-xs uppercase text-muted-foreground">Status override</Label>
             <div className="flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                variant="default"
-                disabled={saving}
-                onClick={() => setStatus("lifetime_free")}
-              >
+              <Button size="sm" variant="default" disabled={saving} onClick={() => setStatus("lifetime_free")}>
                 <Crown className="h-3 w-3 mr-1" />
                 Lifetime free
               </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                disabled={saving}
-                onClick={() => setStatus("expired")}
-              >
+              <Button size="sm" variant="destructive" disabled={saving} onClick={() => setStatus("expired")}>
                 Expire now
               </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                disabled={saving}
-                onClick={() => setStatus("suspended")}
-              >
+              <Button size="sm" variant="destructive" disabled={saving} onClick={() => setStatus("suspended")}>
                 Suspend
               </Button>
             </div>
           </div>
 
           <CustomExtend onApply={(days, amount) => extend(days, amount)} />
+
+          {s && (
+            <div className="pt-2 border-t">
+              <Button size="sm" variant="destructive" disabled={saving} onClick={removeSub} className="w-full">
+                <Trash2 className="h-3 w-3 mr-1" />
+                Remove subscription
+              </Button>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>
-            Close
-          </Button>
+          <Button variant="ghost" onClick={onClose}>Close</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
