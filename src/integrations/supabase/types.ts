@@ -346,6 +346,7 @@ export type Database = {
           last_payment_amount: number | null
           last_payment_date: string | null
           payment_method: string | null
+          plan_type: string | null
           status: Database["public"]["Enums"]["subscription_status"]
           trial_ends_at: string | null
           updated_at: string
@@ -359,6 +360,7 @@ export type Database = {
           last_payment_amount?: number | null
           last_payment_date?: string | null
           payment_method?: string | null
+          plan_type?: string | null
           status?: Database["public"]["Enums"]["subscription_status"]
           trial_ends_at?: string | null
           updated_at?: string
@@ -372,8 +374,51 @@ export type Database = {
           last_payment_amount?: number | null
           last_payment_date?: string | null
           payment_method?: string | null
+          plan_type?: string | null
           status?: Database["public"]["Enums"]["subscription_status"]
           trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      trial_requests: {
+        Row: {
+          admin_notes: string | null
+          converted_doctor_id: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          message: string | null
+          phone: string
+          specialty: string | null
+          status: Database["public"]["Enums"]["trial_request_status"]
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          converted_doctor_id?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          message?: string | null
+          phone: string
+          specialty?: string | null
+          status?: Database["public"]["Enums"]["trial_request_status"]
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          converted_doctor_id?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          message?: string | null
+          phone?: string
+          specialty?: string | null
+          status?: Database["public"]["Enums"]["trial_request_status"]
           updated_at?: string
         }
         Relationships: []
@@ -461,6 +506,7 @@ export type Database = {
         | "expired"
         | "lifetime_free"
         | "suspended"
+      trial_request_status: "pending" | "contacted" | "converted" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -598,6 +644,7 @@ export const Constants = {
         "lifetime_free",
         "suspended",
       ],
+      trial_request_status: ["pending", "contacted", "converted", "rejected"],
     },
   },
 } as const
