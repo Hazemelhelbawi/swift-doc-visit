@@ -4,6 +4,7 @@ export const RESERVED_PATHS = new Set<string>([
   "dashboard",
   "admin",
   "pricing",
+  "start-trial",
   "api",
   "assets",
   "favicon.ico",
