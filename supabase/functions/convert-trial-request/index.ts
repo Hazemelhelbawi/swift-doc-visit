@@ -106,11 +106,8 @@ Deno.serve(async (req) => {
       .update({ status: "converted", converted_doctor_id: doctor.id })
       .eq("id", trial_request_id);
 
-    // Send password recovery email so doctor can set their own password
-    await admin.auth.admin.generateLink({
-      type: "recovery",
-      email: tr.email,
-    });
+    // No automated email is sent — admin shares the temporary password manually.
+
 
     return json({ success: true, doctor, temp_password: randomPwd });
   } catch (e) {
