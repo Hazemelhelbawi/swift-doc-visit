@@ -336,6 +336,51 @@ export type Database = {
           },
         ]
       }
+      subscription_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          days_extended: number | null
+          doctor_id: string
+          id: string
+          notes: string | null
+          paid_at: string
+          payment_method: string | null
+          plan_type: string | null
+          proof_url: string | null
+          recorded_by: string | null
+          reference: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          days_extended?: number | null
+          doctor_id: string
+          id?: string
+          notes?: string | null
+          paid_at?: string
+          payment_method?: string | null
+          plan_type?: string | null
+          proof_url?: string | null
+          recorded_by?: string | null
+          reference?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          days_extended?: number | null
+          doctor_id?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string
+          payment_method?: string | null
+          plan_type?: string | null
+          proof_url?: string | null
+          recorded_by?: string | null
+          reference?: string | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           admin_notes: string | null
