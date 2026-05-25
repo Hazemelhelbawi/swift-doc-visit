@@ -27,10 +27,16 @@ const Auth = () => {
     }
   }, [doctorSlug]);
 
-  // Build redirect path preserving doctor param (from URL or sessionStorage).
-  // Defaults to /admin so doctors/super-admins land on their dashboard after login.
+  // Build redirect path. Defaults to /admin so doctors/super-admins land on
+  // their dashboard after login. Admin/dashboard paths are NOT prefixed with
+  // the doctor slug (the admin pages resolve the doctor from the logged-in user).
   const getRedirectPath = () => {
     const basePath = redirectParam || "/admin";
+    const isAdminPath =
+      basePath === "/admin" ||
+      basePath.startsWith("/admin/") ||
+      basePath === "/dashboard";
+    if (isAdminPath) return basePath;
     const slug = doctorSlug || sessionStorage.getItem("active_doctor_slug");
     if (!slug) return basePath;
     const separator = basePath.includes("?") ? "&" : "?";
