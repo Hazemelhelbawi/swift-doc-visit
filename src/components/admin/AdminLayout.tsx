@@ -19,8 +19,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isLoading && (!user || !isAdmin)) {
-      navigate(buildPath('/auth'));
+    if (isLoading) return;
+    if (!user) {
+      navigate(buildPath('/auth'), { replace: true });
+    } else if (!isAdmin) {
+      // Logged in but not an admin — send home instead of /auth to avoid a loop.
+      navigate('/', { replace: true });
     }
   }, [user, isAdmin, isLoading, navigate, buildPath]);
 

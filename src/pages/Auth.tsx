@@ -14,7 +14,7 @@ const Auth = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, signIn, signUp, signInWithGoogle } = useAuth();
+  const { user, isAdmin, isLoading: authLoading, signIn, signUp, signInWithGoogle } = useAuth();
   const [searchParams] = useSearchParams();
 
   const doctorSlug = searchParams.get("doctor");
@@ -27,18 +27,18 @@ const Auth = () => {
     }
   }, [doctorSlug]);
 
-  // Build redirect path. Defaults to /admin so doctors/super-admins land on
-  // their dashboard after login. Admin/dashboard paths are NOT prefixed with
-  // the doctor slug (the admin pages resolve the doctor from the logged-in user).
+  // Build redirect path. Admins land on /admin; regular users go to home.
+  // Admin/dashboard paths are NOT prefixed with the doctor slug.
   const getRedirectPath = () => {
-    const basePath = redirectParam || "/admin";
+    const explicit = redirectParam;
+    const basePath = explicit || (isAdmin ? "/admin" : "/");
     const isAdminPath =
       basePath === "/admin" ||
       basePath.startsWith("/admin/") ||
       basePath === "/dashboard";
     if (isAdminPath) return basePath;
     const slug = doctorSlug || sessionStorage.getItem("active_doctor_slug");
-    if (!slug) return basePath;
+    if (!slug || basePath === "/") return basePath;
     const separator = basePath.includes("?") ? "&" : "?";
     return `${basePath}${separator}doctor=${slug}`;
   };
@@ -53,8 +53,10 @@ const Auth = () => {
   });
 
   useEffect(() => {
-    if (user) navigate(getRedirectPath());
-  }, [user, navigate]);
+    // Wait for auth + admin check to resolve before redirecting so we
+    // don't bounce a non-admin to /admin and loop back here.
+    if (!authLoading && user) navigate(getRedirectPath(), { replace: true });
+  }, [user, isAdmin, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
