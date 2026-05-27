@@ -118,6 +118,8 @@ export default function PatientsPage() {
       }
       const p = map.get(key)!;
       p.doctor_ids.add(r.doctor_id);
+      // strip nulls
+      p.doctor_ids.delete(null as any);
       if (r.source === "appointment") p.appointments++;
       else p.consultations++;
       if (new Date(r.created_at) > new Date(p.last_seen)) p.last_seen = r.created_at;
@@ -244,9 +246,9 @@ function PatientTable({
             <TableCell className="text-sm">{p.phone}</TableCell>
             <TableCell>
               <div className="flex flex-wrap gap-1">
-                {Array.from(p.doctor_ids).map((id) => (
+                {Array.from(p.doctor_ids).filter(Boolean).map((id) => (
                   <Badge key={id} variant="outline" className="text-xs">
-                    {doctorMap.get(id) || id.slice(0, 6)}
+                    {doctorMap.get(id) || (id ? id.slice(0, 6) : "—")}
                   </Badge>
                 ))}
               </div>
