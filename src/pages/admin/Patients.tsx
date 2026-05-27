@@ -244,9 +244,9 @@ function PatientTable({
             <TableCell className="text-sm">{p.phone}</TableCell>
             <TableCell>
               <div className="flex flex-wrap gap-1">
-                {Array.from(p.doctor_ids).map((id) => (
+                {Array.from(p.doctor_ids).filter(Boolean).map((id) => (
                   <Badge key={id} variant="outline" className="text-xs">
-                    {doctorMap.get(id) || id.slice(0, 6)}
+                    {doctorMap.get(id) || (id ? id.slice(0, 6) : "—")}
                   </Badge>
                 ))}
               </div>
