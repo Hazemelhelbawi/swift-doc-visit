@@ -14,7 +14,7 @@ const Auth = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, signIn, signUp, signInWithGoogle } = useAuth();
+  const { user, isAdmin, isLoading: authLoading, signIn, signUp, signInWithGoogle } = useAuth();
   const [searchParams] = useSearchParams();
 
   const doctorSlug = searchParams.get("doctor");
