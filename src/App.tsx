@@ -35,6 +35,7 @@ import AdminBilling from "./pages/admin/Billing";
 import AdminSubscriptions from "./pages/admin/Subscriptions";
 import AdminTrialRequests from "./pages/admin/TrialRequests";
 import AdminPatients from "./pages/admin/Patients";
+import AdminDoctors from "./pages/admin/Doctors";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -124,6 +125,7 @@ const App = () => (
                   <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
                   <Route path="/admin/trial-requests" element={<AdminTrialRequests />} />
                   <Route path="/admin/patients" element={<AdminPatients />} />
+                  <Route path="/admin/doctors" element={<AdminDoctors />} />
                   <Route path="/admin/settings" element={<AdminSettings />} />
 
                   {/* Public per-doctor pages: /:slug, /:slug/about, etc. */}

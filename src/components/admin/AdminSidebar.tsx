@@ -12,6 +12,7 @@ import {
   Crown,
   UserPlus,
   Users,
+  Stethoscope,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -78,6 +79,11 @@ export function AdminSidebar() {
     { title: t("admin.settings"), url: "/admin/settings", icon: Settings },
     ...(isSuper
       ? [
+          {
+            title: isRTL ? "الأطباء" : "Doctors",
+            url: "/admin/doctors",
+            icon: Stethoscope,
+          },
           {
             title: isRTL ? "طلبات التجربة" : "Trial Requests",
             url: "/admin/trial-requests",
