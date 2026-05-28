@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Layout } from "@/components/layout/Layout";
+import { getRedirectPath as buildRedirectPath } from "@/lib/getRedirectPath";
 
 const Auth = () => {
   const { t } = useTranslation();
@@ -20,27 +21,26 @@ const Auth = () => {
   const doctorSlug = searchParams.get("doctor");
   const redirectParam = searchParams.get("redirect");
 
-  // Persist doctor slug on mount so it survives redirects
   useEffect(() => {
     if (doctorSlug) {
       sessionStorage.setItem("active_doctor_slug", doctorSlug);
     }
   }, [doctorSlug]);
 
-  // Build redirect path. Admins land on /admin; regular users go to home.
-  // Admin/dashboard paths are NOT prefixed with the doctor slug.
   const getRedirectPath = () => {
-    const explicit = redirectParam;
-    const basePath = explicit || (isAdmin ? "/admin" : "/");
-    const isAdminPath =
-      basePath === "/admin" ||
-      basePath.startsWith("/admin/") ||
-      basePath === "/dashboard";
-    if (isAdminPath) return basePath;
     const slug = doctorSlug || sessionStorage.getItem("active_doctor_slug");
-    if (!slug || basePath === "/") return basePath;
-    const separator = basePath.includes("?") ? "&" : "?";
-    return `${basePath}${separator}doctor=${slug}`;
+    const target = buildRedirectPath({
+      explicit: redirectParam,
+      isAdmin,
+      doctorSlug: slug,
+    });
+    console.info("[Auth] redirect resolved", {
+      explicit: redirectParam,
+      isAdmin,
+      doctorSlug: slug,
+      target,
+    });
+    return target;
   };
 
   const [isLogin, setIsLogin] = useState(true);
@@ -53,9 +53,12 @@ const Auth = () => {
   });
 
   useEffect(() => {
-    // Wait for auth + admin check to resolve before redirecting so we
-    // don't bounce a non-admin to /admin and loop back here.
-    if (!authLoading && user) navigate(getRedirectPath(), { replace: true });
+    if (!authLoading && user) {
+      const target = getRedirectPath();
+      console.info("[Auth] user present, navigating", { target, isAdmin });
+      navigate(target, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isAdmin, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {

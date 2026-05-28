@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { CreateDoctorDialog } from "./Doctors";
 
 interface TrialRequest {
   id: string;
@@ -45,6 +46,7 @@ export default function TrialRequestsPage() {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
   const qc = useQueryClient();
   const [converting, setConverting] = useState<TrialRequest | null>(null);
+  const [quickCreate, setQuickCreate] = useState(false);
 
   const { data: isSuper, isLoading: superLoading } = useQuery({
     queryKey: ["is-superadmin", user?.id],
@@ -105,11 +107,16 @@ export default function TrialRequestsPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Trial Requests</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            New signups from the public marketing site.
-          </p>
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Trial Requests</h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              New signups from the public marketing site.
+            </p>
+          </div>
+          <Button onClick={() => setQuickCreate(true)}>
+            <UserPlus className="h-4 w-4 mr-2" /> Create doctor directly
+          </Button>
         </div>
 
         <Card>
@@ -186,6 +193,16 @@ export default function TrialRequestsPage() {
           qc.invalidateQueries({ queryKey: ["trial-requests"] });
           qc.invalidateQueries({ queryKey: ["all-subscriptions"] });
           setConverting(null);
+        }}
+      />
+
+      <CreateDoctorDialog
+        open={quickCreate}
+        onClose={() => setQuickCreate(false)}
+        onDone={() => {
+          qc.invalidateQueries({ queryKey: ["trial-requests"] });
+          qc.invalidateQueries({ queryKey: ["all-doctors"] });
+          setQuickCreate(false);
         }}
       />
     </AdminLayout>
