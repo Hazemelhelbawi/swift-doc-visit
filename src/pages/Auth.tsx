@@ -10,6 +10,30 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Layout } from "@/components/layout/Layout";
 import { getRedirectPath as buildRedirectPath } from "@/lib/getRedirectPath";
+import { supabase } from "@/integrations/supabase/client";
+
+async function resolveIsAdmin(userId: string): Promise<boolean> {
+  const [{ data: roleRow }, { data: superRow }, { data: doctorRow }] =
+    await Promise.all([
+      supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .maybeSingle(),
+      supabase
+        .from("superadmins")
+        .select("user_id")
+        .eq("user_id", userId)
+        .maybeSingle(),
+      supabase
+        .from("doctors")
+        .select("id")
+        .eq("user_id", userId)
+        .maybeSingle(),
+    ]);
+  return !!roleRow || !!superRow || !!doctorRow;
+}
 
 const Auth = () => {
   const { t } = useTranslation();
