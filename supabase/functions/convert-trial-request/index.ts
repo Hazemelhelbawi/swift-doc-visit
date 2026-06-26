@@ -49,45 +49,89 @@ Deno.serve(async (req) => {
     if (trErr || !tr) return json({ error: "Trial request not found" }, 404);
     if (tr.status === "converted") return json({ error: "Already converted" }, 400);
 
-    // Create auth user
-    const randomPwd = crypto.randomUUID() + "Aa1!";
+    // Create or reuse auth user
+    let newUserId: string | null = null;
+    let randomPwd: string | null = crypto.randomUUID() + "Aa1!";
+    let reusedExistingUser = false;
+
     const { data: created, error: createErr } = await admin.auth.admin.createUser({
       email: tr.email,
       password: randomPwd,
       email_confirm: true,
       user_metadata: { full_name: tr.full_name, phone: tr.phone },
     });
-    if (createErr || !created.user) return json({ error: createErr?.message || "User creation failed" }, 400);
-    const newUserId = created.user.id;
 
-    // Grant admin role (handle_new_user trigger inserts 'user' by default)
+    if (createErr || !created?.user) {
+      const msg = (createErr?.message || "").toLowerCase();
+      const alreadyExists =
+        msg.includes("already been registered") ||
+        msg.includes("already registered") ||
+        msg.includes("user already exists") ||
+        msg.includes("duplicate");
+      if (!alreadyExists) {
+        return json({ error: createErr?.message || "User creation failed" }, 400);
+      }
+
+      // Look up existing user by email
+      const { data: list, error: listErr } = await admin.auth.admin.listUsers({
+        page: 1,
+        perPage: 200,
+      });
+      if (listErr) return json({ error: listErr.message }, 400);
+      const existing = list.users.find(
+        (u) => (u.email || "").toLowerCase() === tr.email.toLowerCase()
+      );
+      if (!existing) return json({ error: "Email exists but user lookup failed" }, 400);
+      newUserId = existing.id;
+      reusedExistingUser = true;
+      randomPwd = null; // don't return a password we didn't set
+    } else {
+      newUserId = created.user.id;
+    }
+
+    // If this user is already linked to a doctor, reuse it instead of erroring
+    const { data: existingDoctor } = await admin
+      .from("doctors")
+      .select("*")
+      .eq("user_id", newUserId)
+      .maybeSingle();
+
+    // Grant admin role
     await admin.from("user_roles").upsert(
       { user_id: newUserId, role: "admin" },
       { onConflict: "user_id,role" }
     );
-    // Update profile phone
+    // Update profile
     await admin
       .from("profiles")
       .update({ phone: tr.phone, full_name: tr.full_name })
       .eq("user_id", newUserId);
 
-    // Create doctor record
-    const insertPayload: any = {
-      email: tr.email,
-      user_id: newUserId,
-      is_active: true,
-    };
-    if (slug) insertPayload.slug = slug;
-    const { data: doctor, error: docErr } = await admin
-      .from("doctors")
-      .insert(insertPayload)
-      .select()
-      .single();
-    if (docErr || !doctor) {
-      // rollback user
-      await admin.auth.admin.deleteUser(newUserId);
-      return json({ error: docErr?.message || "Doctor create failed" }, 400);
+    let doctor = existingDoctor;
+    if (!doctor) {
+      const insertPayload: any = {
+        email: tr.email,
+        user_id: newUserId,
+        is_active: true,
+      };
+      if (slug) insertPayload.slug = slug;
+      const { data: inserted, error: docErr } = await admin
+        .from("doctors")
+        .insert(insertPayload)
+        .select()
+        .single();
+      if (docErr || !inserted) {
+        if (!reusedExistingUser) {
+          await admin.auth.admin.deleteUser(newUserId);
+        }
+        return json({ error: docErr?.message || "Doctor create failed" }, 400);
+      }
+      doctor = inserted;
+    } else if (slug && existingDoctor.slug !== slug) {
+      // optionally update slug if provided and different
+      await admin.from("doctors").update({ slug }).eq("id", existingDoctor.id);
     }
+
 
     // Trigger create_doctor_trial may have run; ensure subscription exists and set plan_type
     await admin.from("subscriptions").upsert(
@@ -109,7 +153,7 @@ Deno.serve(async (req) => {
     // No automated email is sent — admin shares the temporary password manually.
 
 
-    return json({ success: true, doctor, temp_password: randomPwd });
+    return json({ success: true, doctor, temp_password: randomPwd, reused_existing_user: reusedExistingUser });
   } catch (e) {
     return json({ error: String(e?.message || e) }, 500);
   }
