@@ -35,6 +35,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 export function AdminSidebar() {
   const { t } = useTranslation();
@@ -55,6 +56,19 @@ export function AdminSidebar() {
       return !!data;
     },
     enabled: !!user,
+  });
+
+  const { data: pendingTrials = 0 } = useQuery({
+    queryKey: ["trial-requests-pending-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("trial_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+      return count ?? 0;
+    },
+    enabled: !!isSuper,
+    refetchInterval: 30000,
   });
 
   const menuItems = [
@@ -88,6 +102,7 @@ export function AdminSidebar() {
             title: isRTL ? "طلبات التجربة" : "Trial Requests",
             url: "/admin/trial-requests",
             icon: UserPlus,
+            badge: pendingTrials > 0 ? pendingTrials : undefined,
           },
           {
             title: isRTL ? "المرضى" : "Patients",
@@ -141,7 +156,16 @@ export function AdminSidebar() {
                       activeClassName="bg-primary/10 text-primary font-medium"
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span>{item.title}</span>}
+                      {!collapsed && (
+                        <span className="flex-1 flex items-center justify-between gap-2">
+                          <span>{item.title}</span>
+                          {(item as any).badge !== undefined && (
+                            <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-xs">
+                              {(item as any).badge}
+                            </Badge>
+                          )}
+                        </span>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
