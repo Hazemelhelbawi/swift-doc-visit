@@ -91,10 +91,22 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { error } = await signIn(formData.email, formData.password);
+        const { data: signInData, error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        });
         if (error) throw error;
         toast({ title: t("auth.loginSuccess") });
-        navigate(getRedirectPath());
+        const uid = signInData.user?.id;
+        const adminResolved = uid ? await resolveIsAdmin(uid) : false;
+        const slug = doctorSlug || sessionStorage.getItem("active_doctor_slug");
+        const target = buildRedirectPath({
+          explicit: redirectParam,
+          isAdmin: adminResolved,
+          doctorSlug: slug,
+        });
+        console.info("[Auth] post-login redirect", { target, adminResolved });
+        navigate(target, { replace: true });
       } else {
         const { error } = await signUp(
           formData.email,
