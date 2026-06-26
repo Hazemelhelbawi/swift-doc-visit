@@ -102,6 +102,7 @@ export function AdminSidebar() {
             title: isRTL ? "طلبات التجربة" : "Trial Requests",
             url: "/admin/trial-requests",
             icon: UserPlus,
+            badge: pendingTrials > 0 ? pendingTrials : undefined,
           },
           {
             title: isRTL ? "المرضى" : "Patients",
