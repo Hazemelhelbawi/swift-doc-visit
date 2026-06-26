@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { Loader2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   useMySubscription,
   hasActiveAccess,
@@ -18,7 +20,7 @@ interface Props {
 
 /**
  * Blocks access to admin pages when the doctor's subscription is expired.
- * Super-admins (admin role without a doctor record) bypass this check.
+ * Super-admins bypass this check (even if they also have a doctor record).
  */
 export function SubscriptionGuard({ children }: Props) {
   const { user } = useAuth();
@@ -28,10 +30,22 @@ export function SubscriptionGuard({ children }: Props) {
   const { language } = useLanguage();
   const isAr = language === "ar";
 
-  // Super-admin (no doctorId attached) bypasses paywall
+  const { data: isSuper, isLoading: isSuperLoading } = useQuery({
+    queryKey: ["is-superadmin", user?.id],
+    queryFn: async () => {
+      if (!user) return false;
+      const { data } = await supabase.rpc("is_superadmin", { _user_id: user.id });
+      return !!data;
+    },
+    enabled: !!user,
+  });
+
+  // Super-admin always bypasses paywall, even if also linked to a doctor record
+  if (isSuper) return <>{children}</>;
   if (user && !doctorId) return <>{children}</>;
 
-  if (isLoading) {
+  if (isLoading || isSuperLoading) {
+
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
