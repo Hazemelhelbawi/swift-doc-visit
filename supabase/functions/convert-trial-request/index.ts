@@ -153,7 +153,7 @@ Deno.serve(async (req) => {
     // No automated email is sent — admin shares the temporary password manually.
 
 
-    return json({ success: true, doctor, temp_password: randomPwd });
+    return json({ success: true, doctor, temp_password: randomPwd, reused_existing_user: reusedExistingUser });
   } catch (e) {
     return json({ error: String(e?.message || e) }, 500);
   }
