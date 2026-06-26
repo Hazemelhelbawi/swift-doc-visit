@@ -58,6 +58,19 @@ export function AdminSidebar() {
     enabled: !!user,
   });
 
+  const { data: pendingTrials = 0 } = useQuery({
+    queryKey: ["trial-requests-pending-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("trial_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+      return count ?? 0;
+    },
+    enabled: !!isSuper,
+    refetchInterval: 30000,
+  });
+
   const menuItems = [
     { title: t("admin.dashboard"), url: "/admin", icon: LayoutDashboard },
     { title: t("admin.clinics"), url: "/admin/clinics", icon: Building2 },
