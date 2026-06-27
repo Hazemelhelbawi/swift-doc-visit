@@ -13,11 +13,14 @@ import { useDoctorSlug } from '@/hooks/useDoctorSlug';
 import { useSeedDoctorDefaults } from '@/hooks/useSeedDoctorDefaults';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { TrialBanner } from '@/components/admin/TrialBanner';
+import { useAuth } from '@/contexts/AuthContext';
+import SuperAdminDashboard from './SuperAdminDashboard';
 
 export default function AdminDashboard() {
   const { t } = useTranslation();
   const { doctorId } = useDoctor();
   const { buildPath } = useDoctorSlug();
+  const { isSuperAdmin } = useAuth();
   useSeedDoctorDefaults();
 
   useRealtimeSubscription('appointments', [['admin-stats', doctorId ?? ''], ['recent-appointments', doctorId ?? '']], !!doctorId);
