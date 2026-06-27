@@ -13,22 +13,21 @@ interface AdminLayoutProps {
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
-  const { user, isLoading, isAdmin } = useAuth();
+  const { user, isLoading, isAdmin, isRoleLoading } = useAuth();
   const { language } = useLanguage();
   const { buildPath } = useDoctorSlug();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || isRoleLoading) return;
     if (!user) {
       navigate(buildPath('/auth'), { replace: true });
     } else if (!isAdmin) {
-      // Logged in but not an admin — send home instead of /auth to avoid a loop.
       navigate('/', { replace: true });
     }
-  }, [user, isAdmin, isLoading, navigate, buildPath]);
+  }, [user, isAdmin, isLoading, isRoleLoading, navigate, buildPath]);
 
-  if (isLoading) {
+  if (isLoading || isRoleLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
