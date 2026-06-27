@@ -2,11 +2,19 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
+export type AppRole = "superadmin" | "doctor" | "user";
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
+  /** Resolved role from DB. `null` while loading or signed out. */
+  role: AppRole | null;
+  isRoleLoading: boolean;
+  /** Convenience: superadmin OR doctor (can access /admin). */
   isAdmin: boolean;
+  isSuperAdmin: boolean;
+  isDoctor: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (
     email: string,
@@ -19,13 +27,33 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+export async function resolveUserRole(userId: string): Promise<AppRole> {
+  // Superadmin wins over doctor; doctor wins over plain user.
+  const [{ data: superRow }, { data: doctorRow }] = await Promise.all([
+    supabase.from("superadmins").select("user_id").eq("user_id", userId).maybeSingle(),
+    supabase.from("doctors").select("id").eq("user_id", userId).eq("is_active", true).maybeSingle(),
+  ]);
+  if (superRow) return "superadmin";
+  if (doctorRow) return "doctor";
+  return "user";
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [role, setRole] = useState<AppRole | null>(null);
+  const [isRoleLoading, setIsRoleLoading] = useState(false);
+
+  const loadRole = (userId: string) => {
+    setIsRoleLoading(true);
+    resolveUserRole(userId)
+      .then((r) => setRole(r))
+      .catch(() => setRole("user"))
+      .finally(() => setIsRoleLoading(false));
+  };
 
   useEffect(() => {
     const {
@@ -35,11 +63,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        setTimeout(() => {
-          checkAdminRole(session.user.id);
-        }, 0);
+        // Defer to avoid deadlocks per Supabase guidance.
+        setTimeout(() => loadRole(session.user.id), 0);
       } else {
-        setIsAdmin(false);
+        setRole(null);
+        setIsRoleLoading(false);
       }
     });
 
@@ -47,23 +75,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        checkAdminRole(session.user.id);
+        loadRole(session.user.id);
       }
       setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const checkAdminRole = async (userId: string) => {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "admin")
-      .maybeSingle();
-    setIsAdmin(!!data);
-  };
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -100,13 +118,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return { error: error as Error | null };
   };
 
+  const isSuperAdmin = role === "superadmin";
+  const isDoctor = role === "doctor";
+  const isAdmin = isSuperAdmin || isDoctor;
+
   return (
     <AuthContext.Provider
       value={{
         user,
         session,
         isLoading,
+        role,
+        isRoleLoading,
         isAdmin,
+        isSuperAdmin,
+        isDoctor,
         signIn,
         signUp,
         signOut,
