@@ -42,21 +42,9 @@ export function AdminSidebar() {
   const { language } = useLanguage();
   const { state, toggleSidebar } = useSidebar();
   const { buildPath } = useDoctorSlug();
-  const { user } = useAuth();
+  const { isSuperAdmin } = useAuth();
   const collapsed = state === "collapsed";
   const isRTL = language === "ar";
-
-  const { data: isSuper } = useQuery({
-    queryKey: ["is-superadmin", user?.id],
-    queryFn: async () => {
-      if (!user) return false;
-      const { data } = await supabase.rpc("is_superadmin", {
-        _user_id: user.id,
-      });
-      return !!data;
-    },
-    enabled: !!user,
-  });
 
   const { data: pendingTrials = 0 } = useQuery({
     queryKey: ["trial-requests-pending-count"],
@@ -67,56 +55,34 @@ export function AdminSidebar() {
         .eq("status", "pending");
       return count ?? 0;
     },
-    enabled: !!isSuper,
+    enabled: !!isSuperAdmin,
     refetchInterval: 30000,
   });
 
-  const menuItems = [
+  const doctorMenu = [
     { title: t("admin.dashboard"), url: "/admin", icon: LayoutDashboard },
     { title: t("admin.clinics"), url: "/admin/clinics", icon: Building2 },
     { title: t("admin.schedules"), url: "/admin/schedules", icon: Calendar },
-    {
-      title: t("admin.appointments"),
-      url: "/admin/appointments",
-      icon: ClipboardList,
-    },
-    {
-      title: t("admin.consultations"),
-      url: "/admin/consultations",
-      icon: MessageSquare,
-    },
-    {
-      title: isRTL ? "الفواتير" : "Billing",
-      url: "/admin/billing",
-      icon: CreditCard,
-    },
+    { title: t("admin.appointments"), url: "/admin/appointments", icon: ClipboardList },
+    { title: t("admin.consultations"), url: "/admin/consultations", icon: MessageSquare },
+    { title: isRTL ? "الفواتير" : "Billing", url: "/admin/billing", icon: CreditCard },
     { title: t("admin.settings"), url: "/admin/settings", icon: Settings },
-    ...(isSuper
-      ? [
-          {
-            title: isRTL ? "الأطباء" : "Doctors",
-            url: "/admin/doctors",
-            icon: Stethoscope,
-          },
-          {
-            title: isRTL ? "طلبات التجربة" : "Trial Requests",
-            url: "/admin/trial-requests",
-            icon: UserPlus,
-            badge: pendingTrials > 0 ? pendingTrials : undefined,
-          },
-          {
-            title: isRTL ? "المرضى" : "Patients",
-            url: "/admin/patients",
-            icon: Users,
-          },
-          {
-            title: isRTL ? "الاشتراكات" : "Subscriptions",
-            url: "/admin/subscriptions",
-            icon: Crown,
-          },
-        ]
-      : []),
   ];
+
+  const superMenu = [
+    { title: isRTL ? "نظرة عامة" : "Overview", url: "/admin", icon: LayoutDashboard },
+    { title: isRTL ? "الأطباء" : "Doctors", url: "/admin/doctors", icon: Stethoscope },
+    {
+      title: isRTL ? "طلبات التجربة" : "Trial Requests",
+      url: "/admin/trial-requests",
+      icon: UserPlus,
+      badge: pendingTrials > 0 ? pendingTrials : undefined,
+    },
+    { title: isRTL ? "المرضى" : "Patients", url: "/admin/patients", icon: Users },
+    { title: isRTL ? "الاشتراكات" : "Subscriptions", url: "/admin/subscriptions", icon: Crown },
+  ];
+
+  const menuItems = isSuperAdmin ? superMenu : doctorMenu;
 
   return (
     <Sidebar
