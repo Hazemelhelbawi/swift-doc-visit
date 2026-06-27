@@ -7,39 +7,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, resolveUserRole } from "@/contexts/AuthContext";
 import { Layout } from "@/components/layout/Layout";
 import { getRedirectPath as buildRedirectPath } from "@/lib/getRedirectPath";
 import { supabase } from "@/integrations/supabase/client";
-
-async function resolveIsAdmin(userId: string): Promise<boolean> {
-  const [{ data: roleRow }, { data: superRow }, { data: doctorRow }] =
-    await Promise.all([
-      supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .eq("role", "admin")
-        .maybeSingle(),
-      supabase
-        .from("superadmins")
-        .select("user_id")
-        .eq("user_id", userId)
-        .maybeSingle(),
-      supabase
-        .from("doctors")
-        .select("id")
-        .eq("user_id", userId)
-        .maybeSingle(),
-    ]);
-  return !!roleRow || !!superRow || !!doctorRow;
-}
 
 const Auth = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, isAdmin, isLoading: authLoading, signIn, signUp, signInWithGoogle } = useAuth();
+  const {
+    user,
+    isAdmin,
+    isLoading: authLoading,
+    isRoleLoading,
+    signUp,
+    signInWithGoogle,
+  } = useAuth();
   const [searchParams] = useSearchParams();
 
   const doctorSlug = searchParams.get("doctor");
@@ -51,16 +35,16 @@ const Auth = () => {
     }
   }, [doctorSlug]);
 
-  const getRedirectPath = () => {
+  const getRedirectPath = (overrideIsAdmin?: boolean) => {
     const slug = doctorSlug || sessionStorage.getItem("active_doctor_slug");
     const target = buildRedirectPath({
       explicit: redirectParam,
-      isAdmin,
+      isAdmin: overrideIsAdmin ?? isAdmin,
       doctorSlug: slug,
     });
     console.info("[Auth] redirect resolved", {
       explicit: redirectParam,
-      isAdmin,
+      isAdmin: overrideIsAdmin ?? isAdmin,
       doctorSlug: slug,
       target,
     });
@@ -76,14 +60,15 @@ const Auth = () => {
     fullName: "",
   });
 
+  // Auto-redirect already-authenticated visitors once role is resolved.
   useEffect(() => {
-    if (!authLoading && user) {
-      const target = getRedirectPath();
-      console.info("[Auth] user present, navigating", { target, isAdmin });
-      navigate(target, { replace: true });
-    }
+    if (authLoading || isRoleLoading) return;
+    if (!user) return;
+    const target = getRedirectPath();
+    console.info("[Auth] user present, navigating", { target, isAdmin });
+    navigate(target, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, isAdmin, authLoading, navigate]);
+  }, [user, isAdmin, authLoading, isRoleLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,14 +83,11 @@ const Auth = () => {
         if (error) throw error;
         toast({ title: t("auth.loginSuccess") });
         const uid = signInData.user?.id;
-        const adminResolved = uid ? await resolveIsAdmin(uid) : false;
-        const slug = doctorSlug || sessionStorage.getItem("active_doctor_slug");
-        const target = buildRedirectPath({
-          explicit: redirectParam,
-          isAdmin: adminResolved,
-          doctorSlug: slug,
-        });
-        console.info("[Auth] post-login redirect", { target, adminResolved });
+        // Resolve role BEFORE navigating to avoid race with context state.
+        const role = uid ? await resolveUserRole(uid) : "user";
+        const adminResolved = role === "superadmin" || role === "doctor";
+        const target = getRedirectPath(adminResolved);
+        console.info("[Auth] post-login redirect", { target, role });
         navigate(target, { replace: true });
       } else {
         const { error } = await signUp(
@@ -114,7 +96,6 @@ const Auth = () => {
           formData.fullName
         );
         if (error) {
-          // Handle specific error cases
           if (
             error.message.includes("already registered") ||
             error.message.includes("already exists")
@@ -147,7 +128,6 @@ const Auth = () => {
 
   const handleGoogleSignIn = async () => {
     const redirectPath = getRedirectPath();
-    // Store redirect path so the auth provider can use it after OAuth flow
     sessionStorage.setItem("post_auth_redirect_path", redirectPath);
     const { error } = await signInWithGoogle();
     if (error) {
@@ -158,6 +138,7 @@ const Auth = () => {
       });
     }
   };
+
 
   return (
     <Layout>
