@@ -140,20 +140,6 @@ const Auth = () => {
   };
 
 
-  const handleGoogleSignIn = async () => {
-    const redirectPath = getRedirectPath();
-    // Store redirect path so the auth provider can use it after OAuth flow
-    sessionStorage.setItem("post_auth_redirect_path", redirectPath);
-    const { error } = await signInWithGoogle();
-    if (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <Layout>
       <section className="py-20">
