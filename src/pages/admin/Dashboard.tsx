@@ -136,6 +136,9 @@ export default function AdminDashboard() {
 
   return (
     <AdminLayout>
+      {isSuperAdmin ? (
+        <SuperAdminDashboard />
+      ) : (
       <div className="space-y-6">
         <TrialBanner />
         {/* Header */}
