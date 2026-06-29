@@ -14,6 +14,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/LanguageContext";
+import showcaseDashboard from "@/assets/showcase-dashboard.jpg";
+import showcasePublic from "@/assets/showcase-public.jpg";
+import showcaseMobile from "@/assets/showcase-mobile.jpg";
 
 export default function MarketingHome() {
   const { language, setLanguage } = useLanguage();
@@ -114,6 +117,118 @@ export default function MarketingHome() {
           <Button asChild variant="outline" size="lg" className="text-base">
             <Link to="/auth">{isAr ? "تسجيل الدخول" : "Already a doctor? Log in"}</Link>
           </Button>
+        </div>
+      </section>
+
+      {/* Showcase: public page preview */}
+      <section className="max-w-6xl mx-auto px-4 py-12">
+        <div className="grid lg:grid-cols-2 gap-10 items-center">
+          <div>
+            <span className="text-xs font-medium text-primary uppercase tracking-wider">
+              {isAr ? "صفحتك العامة" : "Your public page"}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-2">
+              {isAr ? "موقع جميل يخصك وحدك" : "A beautiful site that's all yours"}
+            </h2>
+            <p className="text-muted-foreground mt-4">
+              {isAr
+                ? "كل طبيب يحصل على رابط مخصص مثل doctor-platform.com/dr-ahmed يعرض صورته وتخصصه وعياداته وخدماته، مع زر حجز مباشر."
+                : "Every doctor gets a custom URL like doctor-platform.com/dr-ahmed showing their photo, specialty, clinics, services, and a direct booking button."}
+            </p>
+            <ul className="mt-6 space-y-2 text-sm">
+              {(isAr
+                ? ["تصميم احترافي جاهز", "حجز فوري بدون اتصال", "محسّن لمحركات البحث", "متجاوب على كل الأجهزة"]
+                : ["Professional design out of the box", "Instant booking — no phone call", "SEO-friendly", "Responsive on every device"]
+              ).map((f) => (
+                <li key={f} className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-xl overflow-hidden border border-border shadow-2xl">
+            <img
+              src={showcasePublic}
+              alt={isAr ? "معاينة الصفحة العامة للطبيب" : "Doctor public page preview"}
+              width={1600}
+              height={1024}
+              loading="lazy"
+              className="w-full h-auto"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Showcase: dashboard */}
+      <section className="max-w-6xl mx-auto px-4 py-12">
+        <div className="grid lg:grid-cols-2 gap-10 items-center">
+          <div className="lg:order-2">
+            <span className="text-xs font-medium text-primary uppercase tracking-wider">
+              {isAr ? "لوحة التحكم" : "Admin dashboard"}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-2">
+              {isAr ? "كل شيء تحت السيطرة" : "Everything under control"}
+            </h2>
+            <p className="text-muted-foreground mt-4">
+              {isAr
+                ? "أدر العيادات والمواعيد والاستشارات من لوحة واحدة، مع إشعارات فورية لكل حجز جديد."
+                : "Manage clinics, schedules, appointments and consultations from one place — with real-time updates on every booking."}
+            </p>
+            <ul className="mt-6 space-y-2 text-sm">
+              {(isAr
+                ? ["إحصائيات لحظية", "إدارة عيادات متعددة", "جداول متكررة وذكية", "تتبع الإيرادات والمرضى"]
+                : ["Live stats at a glance", "Multi-clinic management", "Smart recurring schedules", "Track patients and revenue"]
+              ).map((f) => (
+                <li key={f} className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="lg:order-1 rounded-xl overflow-hidden border border-border shadow-2xl">
+            <img
+              src={showcaseDashboard}
+              alt={isAr ? "معاينة لوحة تحكم الطبيب" : "Doctor admin dashboard preview"}
+              width={1600}
+              height={1024}
+              loading="lazy"
+              className="w-full h-auto"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Mobile showcase */}
+      <section className="max-w-6xl mx-auto px-4 py-12">
+        <div className="rounded-2xl bg-primary/5 border border-primary/20 p-8 md:p-12 grid md:grid-cols-2 gap-8 items-center">
+          <div>
+            <h2 className="text-3xl font-bold text-foreground">
+              {isAr ? "حجز سهل من الهاتف" : "Effortless mobile booking"}
+            </h2>
+            <p className="text-muted-foreground mt-4">
+              {isAr
+                ? "مرضاك يحجزون من أي مكان، في أي وقت — بدون تطبيق، بدون مكالمات."
+                : "Your patients book from anywhere, anytime — no app to install, no phone calls."}
+            </p>
+            <Button asChild size="lg" className="mt-6">
+              <Link to="/start-trial">
+                {isAr ? "ابدأ الآن" : "Get started"}
+                <ArrowRight className={`h-4 w-4 ${isAr ? "mr-2 rotate-180" : "ml-2"}`} />
+              </Link>
+            </Button>
+          </div>
+          <div className="flex justify-center">
+            <img
+              src={showcaseMobile}
+              alt={isAr ? "معاينة الحجز من الهاتف" : "Mobile booking preview"}
+              width={768}
+              height={1024}
+              loading="lazy"
+              className="max-h-[500px] w-auto drop-shadow-2xl"
+            />
+          </div>
         </div>
       </section>
 

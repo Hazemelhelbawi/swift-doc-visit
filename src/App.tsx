@@ -23,6 +23,7 @@ import NotFound from "./pages/NotFound";
 import Pricing from "./pages/Pricing";
 import MarketingHome from "./pages/MarketingHome";
 import StartTrial from "./pages/StartTrial";
+import Unauthorized from "./pages/Unauthorized";
 
 // Admin pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -113,6 +114,7 @@ const App = () => (
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/pricing" element={<Pricing />} />
                   <Route path="/start-trial" element={<StartTrial />} />
+                  <Route path="/unauthorized" element={<Unauthorized />} />
 
                   {/* Admin (auth-gated inside pages) */}
                   <Route path="/dashboard" element={<AdminDashboard />} />

@@ -1,5 +1,5 @@
 import { ReactNode, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AdminSidebar } from './AdminSidebar';
@@ -7,25 +7,30 @@ import { SubscriptionGuard } from './SubscriptionGuard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useDoctorSlug } from '@/hooks/useDoctorSlug';
 import { Loader2 } from 'lucide-react';
+import Unauthorized from '@/pages/Unauthorized';
 
 interface AdminLayoutProps {
   children: ReactNode;
+  /** Restrict this route to superadmin or doctor only. Defaults to either. */
+  requireRole?: 'superadmin' | 'doctor';
 }
 
-export function AdminLayout({ children }: AdminLayoutProps) {
-  const { user, isLoading, isAdmin, isRoleLoading } = useAuth();
+// Routes that are doctor-only (superadmin doesn't have a doctor_id scope)
+const DOCTOR_ONLY = ['/admin/clinics', '/admin/schedules', '/admin/appointments', '/admin/consultations', '/admin/billing', '/admin/settings'];
+// Routes that are superadmin-only
+const SUPERADMIN_ONLY = ['/admin/doctors', '/admin/trial-requests', '/admin/patients', '/admin/subscriptions'];
+
+export function AdminLayout({ children, requireRole }: AdminLayoutProps) {
+  const { user, isLoading, isAdmin, isSuperAdmin, isDoctor, isRoleLoading } = useAuth();
   const { language } = useLanguage();
   const { buildPath } = useDoctorSlug();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (isLoading || isRoleLoading) return;
-    if (!user) {
-      navigate(buildPath('/auth'), { replace: true });
-    } else if (!isAdmin) {
-      navigate('/', { replace: true });
-    }
-  }, [user, isAdmin, isLoading, isRoleLoading, navigate, buildPath]);
+    if (!user) navigate(buildPath('/auth'), { replace: true });
+  }, [user, isLoading, isRoleLoading, navigate, buildPath]);
 
   if (isLoading || isRoleLoading) {
     return (
@@ -35,8 +40,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
-  if (!user || !isAdmin) {
-    return null;
+  if (!user) return null;
+  if (!isAdmin) return <Unauthorized />;
+
+  // Role-based path enforcement
+  const path = location.pathname;
+  const violatesExplicit = requireRole === 'superadmin' ? !isSuperAdmin : requireRole === 'doctor' ? !isDoctor : false;
+  const violatesDoctorOnly = DOCTOR_ONLY.some((p) => path.startsWith(p)) && !isDoctor && !isSuperAdmin;
+  const violatesSuperOnly = SUPERADMIN_ONLY.some((p) => path.startsWith(p)) && !isSuperAdmin;
+  if (violatesExplicit || violatesDoctorOnly || violatesSuperOnly) {
+    return <Unauthorized />;
   }
 
   return (
