@@ -18,6 +18,10 @@ interface Props {
   children: ReactNode;
 }
 
+// Pages that should remain accessible even when the subscription is expired,
+// so the doctor can always see payment instructions / billing status.
+const ALWAYS_ALLOWED_PATHS = ["/admin/billing"];
+
 /**
  * Blocks access to admin pages when the doctor's subscription is expired.
  * Super-admins bypass this check (even if they also have a doctor record).
