@@ -18,6 +18,10 @@ interface Props {
   children: ReactNode;
 }
 
+// Pages that should remain accessible even when the subscription is expired,
+// so the doctor can always see payment instructions / billing status.
+const ALWAYS_ALLOWED_PATHS = ["/admin/billing"];
+
 /**
  * Blocks access to admin pages when the doctor's subscription is expired.
  * Super-admins bypass this check (even if they also have a doctor record).
@@ -29,6 +33,12 @@ export function SubscriptionGuard({ children }: Props) {
   const { data: sub, isLoading } = useMySubscription();
   const { language } = useLanguage();
   const isAr = language === "ar";
+
+  // Always allow billing page so doctors can see payment instructions.
+  if (typeof window !== "undefined" && ALWAYS_ALLOWED_PATHS.some((p) => window.location.pathname.startsWith(p))) {
+    return <>{children}</>;
+  }
+
 
   const { data: isSuper, isLoading: isSuperLoading } = useQuery({
     queryKey: ["is-superadmin", user?.id],
