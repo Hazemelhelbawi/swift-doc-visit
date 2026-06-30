@@ -34,12 +34,6 @@ export function SubscriptionGuard({ children }: Props) {
   const { language } = useLanguage();
   const isAr = language === "ar";
 
-  // Always allow billing page so doctors can see payment instructions.
-  if (typeof window !== "undefined" && ALWAYS_ALLOWED_PATHS.some((p) => window.location.pathname.startsWith(p))) {
-    return <>{children}</>;
-  }
-
-
   const { data: isSuper, isLoading: isSuperLoading } = useQuery({
     queryKey: ["is-superadmin", user?.id],
     queryFn: async () => {
@@ -50,9 +44,15 @@ export function SubscriptionGuard({ children }: Props) {
     enabled: !!user,
   });
 
+  // Always allow billing page so doctors can see payment instructions.
+  if (typeof window !== "undefined" && ALWAYS_ALLOWED_PATHS.some((p) => window.location.pathname.startsWith(p))) {
+    return <>{children}</>;
+  }
+
   // Super-admin always bypasses paywall, even if also linked to a doctor record
   if (isSuper) return <>{children}</>;
   if (user && !doctorId) return <>{children}</>;
+
 
   if (isLoading || isSuperLoading) {
 
