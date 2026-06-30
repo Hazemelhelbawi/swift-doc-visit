@@ -8,13 +8,17 @@ import {
 } from "@/hooks/useSubscription";
 import { useDoctorSlug } from "@/hooks/useDoctorSlug";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function TrialBanner() {
   const { data: sub } = useMySubscription();
   const { buildPath } = useDoctorSlug();
   const { language } = useLanguage();
+  const { isSuperAdmin } = useAuth();
   const isAr = language === "ar";
 
+  // Super admins own the platform — no billing/trial UI for them.
+  if (isSuperAdmin) return null;
   if (!sub) return null;
 
   if (sub.status === "lifetime_free") {
