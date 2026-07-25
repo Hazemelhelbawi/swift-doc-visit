@@ -63,11 +63,16 @@ const plans = [
 export default function BillingPage() {
   const { data: sub, isLoading } = useMySubscription();
   const { language } = useLanguage();
+  const { isSuperAdmin } = useAuth();
   const isAr = language === "ar";
   const qc = useQueryClient();
   const [activating, setActivating] = useState<"monthly" | "yearly" | null>(null);
 
   const activate = async (plan: "monthly" | "yearly") => {
+    if (!PAYMENTS_TEST_MODE) {
+      toast.error(isAr ? "الدفع غير مفعل بعد" : "Payments are not enabled yet");
+      return;
+    }
     setActivating(plan);
     const { error } = await supabase.rpc("activate_my_plan", { _plan_type: plan });
     setActivating(null);
@@ -78,6 +83,35 @@ export default function BillingPage() {
     toast.success(isAr ? "تم تفعيل الخطة" : "Plan activated");
     qc.invalidateQueries({ queryKey: ["my-subscription"] });
   };
+
+  if (isSuperAdmin) {
+    return (
+      <AdminLayout>
+        <div className="max-w-3xl mx-auto space-y-6" dir={isAr ? "rtl" : "ltr"}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-primary" />
+                {isAr ? "حساب المشرف العام" : "Super Admin Account"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                {isAr
+                  ? "أنت تمتلك المنصة — لا يوجد اشتراك أو فوترة على حسابك."
+                  : "You own the platform — no subscription or billing applies to your account."}
+              </p>
+              <Button asChild>
+                <Link to="/admin/subscriptions">
+                  {isAr ? "إدارة اشتراكات الأطباء" : "Manage doctor subscriptions"}
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
