@@ -1,15 +1,17 @@
 import { format } from "date-fns";
+import { useState } from "react";
 import {
   Calendar,
   CheckCircle2,
   Clock,
-  CreditCard,
   Crown,
-  Phone,
+  Sparkles,
   XCircle,
+  Loader2,
 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   useMySubscription,
@@ -18,10 +20,9 @@ import {
 } from "@/hooks/useSubscription";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
-
-const PRICE_LE = 200;
-const ADMIN_PHONE = "+20 000 000 0000";
-const ADMIN_EMAIL = "billing@example.com";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const statusMeta: Record<
   SubscriptionStatus,
@@ -34,22 +35,49 @@ const statusMeta: Record<
   suspended: { en: "Suspended", ar: "معلق", variant: "destructive" },
 };
 
+const plans = [
+  {
+    id: "monthly" as const,
+    en: { title: "Monthly", period: "month", days: "30 days of full access" },
+    ar: { title: "شهري", period: "شهر", days: "30 يومًا من الوصول الكامل" },
+  },
+  {
+    id: "yearly" as const,
+    en: { title: "Yearly", period: "year", days: "365 days of full access" },
+    ar: { title: "سنوي", period: "سنة", days: "365 يومًا من الوصول الكامل" },
+  },
+];
+
 export default function BillingPage() {
   const { data: sub, isLoading } = useMySubscription();
   const { language } = useLanguage();
   const isAr = language === "ar";
+  const qc = useQueryClient();
+  const [activating, setActivating] = useState<"monthly" | "yearly" | null>(null);
+
+  const activate = async (plan: "monthly" | "yearly") => {
+    setActivating(plan);
+    const { error } = await supabase.rpc("activate_my_plan", { _plan_type: plan });
+    setActivating(null);
+    if (error) {
+      toast.error(isAr ? "تعذر تفعيل الخطة" : "Could not activate plan");
+      return;
+    }
+    toast.success(isAr ? "تم تفعيل الخطة" : "Plan activated");
+    qc.invalidateQueries({ queryKey: ["my-subscription"] });
+  };
 
   return (
     <AdminLayout>
       <div className="max-w-3xl mx-auto space-y-6" dir={isAr ? "rtl" : "ltr"}>
         <div>
           <h1 className="text-2xl font-bold text-foreground">
-            {isAr ? "الفواتير والاشتراك" : "Billing & Subscription"}
+            {isAr ? "الاشتراك" : "Subscription"}
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
             {isAr
-              ? "إدارة اشتراكك وعرض حالة الدفع"
-              : "Manage your subscription and view payment status"}
+              ? "اختر خطتك وسيتم تفعيلها فورًا — بدون خطوات دفع."
+              : "Pick a plan and it's activated instantly — no payment required."}
           </p>
         </div>
 
@@ -77,8 +105,8 @@ export default function BillingPage() {
                   <Crown className="h-5 w-5 text-primary" />
                   <span className="text-sm">
                     {isAr
-                      ? "لديك وصول مجاني مدى الحياة. لا حاجة للدفع."
-                      : "You have lifetime free access. No payment required."}
+                      ? "لديك وصول مجاني مدى الحياة."
+                      : "You have lifetime free access."}
                   </span>
                 </div>
               )}
@@ -104,8 +132,8 @@ export default function BillingPage() {
                   <XCircle className="h-5 w-5 text-destructive" />
                   <span className="text-sm">
                     {isAr
-                      ? "اشتراكك منتهي. يرجى الدفع لتفعيل الحساب."
-                      : "Your subscription has expired. Please pay to reactivate."}
+                      ? "اشتراكك منتهي. اختر خطة أدناه للتفعيل."
+                      : "Your subscription has expired. Pick a plan below to reactivate."}
                   </span>
                 </div>
               )}
@@ -113,8 +141,8 @@ export default function BillingPage() {
               {sub.last_payment_date && (
                 <Row
                   icon={<CheckCircle2 className="h-4 w-4 text-primary" />}
-                  label={isAr ? "آخر دفعة" : "Last payment"}
-                  value={`${format(new Date(sub.last_payment_date), "PPP")}${sub.last_payment_amount ? ` — ${sub.last_payment_amount} LE` : ""}`}
+                  label={isAr ? "آخر تفعيل" : "Last activation"}
+                  value={format(new Date(sub.last_payment_date), "PPP")}
                 />
               )}
             </CardContent>
@@ -122,48 +150,45 @@ export default function BillingPage() {
         )}
 
         {sub?.status !== "lifetime_free" && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                {isAr ? "تعليمات الدفع" : "Payment Instructions"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-3xl font-bold text-primary">
-                {PRICE_LE} LE
-                <span className="text-sm font-normal text-muted-foreground ml-2">
-                  / {isAr ? "شهر" : "month"}
-                </span>
-              </div>
-
-              <div className="space-y-2 text-sm">
-                <p className="text-muted-foreground">
-                  {isAr
-                    ? "للاشتراك أو التجديد، يرجى الدفع عبر إحدى الطرق التالية ثم تواصل معنا لتفعيل اشتراكك:"
-                    : "To subscribe or renew, pay via one of the methods below then contact us to activate your subscription:"}
-                </p>
-
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>InstaPay</li>
-                  <li>Vodafone Cash</li>
-                  <li>{isAr ? "تحويل بنكي" : "Bank transfer"}</li>
-                  <li>{isAr ? "نقدًا" : "Cash"}</li>
-                </ul>
-              </div>
-
-              <div className="border-t pt-4 space-y-2">
-                <p className="text-sm font-medium">
-                  {isAr ? "تواصل معنا:" : "Contact us:"}
-                </p>
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>{ADMIN_PHONE}</span>
-                </div>
-                <div className="text-sm text-muted-foreground">{ADMIN_EMAIL}</div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {plans.map((p) => {
+              const meta = isAr ? p.ar : p.en;
+              const isCurrent = sub?.status === "active" && (sub as any).plan_type === p.id;
+              return (
+                <Card key={p.id} className={isCurrent ? "border-primary" : ""}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <Sparkles className="h-5 w-5 text-primary" />
+                        {meta.title}
+                      </span>
+                      {isCurrent && (
+                        <Badge variant="default">{isAr ? "الحالية" : "Current"}</Badge>
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground">{meta.days}</p>
+                    <Button
+                      className="w-full"
+                      disabled={activating !== null || isCurrent}
+                      onClick={() => activate(p.id)}
+                    >
+                      {activating === p.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : isCurrent ? (
+                        isAr ? "خطتك الحالية" : "Your current plan"
+                      ) : isAr ? (
+                        `تفعيل ${meta.title}`
+                      ) : (
+                        `Activate ${meta.title}`
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         )}
       </div>
     </AdminLayout>
