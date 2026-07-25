@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Calendar,
   CheckCircle2,
@@ -8,8 +9,11 @@ import {
   Sparkles,
   XCircle,
   Loader2,
+  ShieldCheck,
+  FlaskConical,
 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,10 +23,18 @@ import {
   type SubscriptionStatus,
 } from "@/hooks/useSubscription";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+
+/**
+ * TEST MODE: when true, picking a plan calls activate_my_plan and instantly
+ * marks the subscription active with zero payment. Flip to false only after a
+ * real payment provider is wired in.
+ */
+const PAYMENTS_TEST_MODE = true;
 
 const statusMeta: Record<
   SubscriptionStatus,
