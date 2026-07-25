@@ -509,6 +509,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activate_my_plan: {
+        Args: { _plan_type: string }
+        Returns: {
+          admin_notes: string | null
+          created_at: string
+          current_period_end: string | null
+          doctor_id: string
+          id: string
+          last_payment_amount: number | null
+          last_payment_date: string | null
+          payment_method: string | null
+          plan_type: string | null
+          status: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "subscriptions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       generate_unique_doctor_slug: { Args: { _base: string }; Returns: string }
       get_available_schedules: {
         Args: { p_clinic_id: string; p_end_date: string; p_start_date: string }
