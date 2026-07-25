@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Calendar,
   CheckCircle2,
@@ -8,8 +9,11 @@ import {
   Sparkles,
   XCircle,
   Loader2,
+  ShieldCheck,
+  FlaskConical,
 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,10 +23,18 @@ import {
   type SubscriptionStatus,
 } from "@/hooks/useSubscription";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+
+/**
+ * TEST MODE: when true, picking a plan calls activate_my_plan and instantly
+ * marks the subscription active with zero payment. Flip to false only after a
+ * real payment provider is wired in.
+ */
+const PAYMENTS_TEST_MODE = true;
 
 const statusMeta: Record<
   SubscriptionStatus,
@@ -51,11 +63,16 @@ const plans = [
 export default function BillingPage() {
   const { data: sub, isLoading } = useMySubscription();
   const { language } = useLanguage();
+  const { isSuperAdmin } = useAuth();
   const isAr = language === "ar";
   const qc = useQueryClient();
   const [activating, setActivating] = useState<"monthly" | "yearly" | null>(null);
 
   const activate = async (plan: "monthly" | "yearly") => {
+    if (!PAYMENTS_TEST_MODE) {
+      toast.error(isAr ? "الدفع غير مفعل بعد" : "Payments are not enabled yet");
+      return;
+    }
     setActivating(plan);
     const { error } = await supabase.rpc("activate_my_plan", { _plan_type: plan });
     setActivating(null);
@@ -66,6 +83,35 @@ export default function BillingPage() {
     toast.success(isAr ? "تم تفعيل الخطة" : "Plan activated");
     qc.invalidateQueries({ queryKey: ["my-subscription"] });
   };
+
+  if (isSuperAdmin) {
+    return (
+      <AdminLayout>
+        <div className="max-w-3xl mx-auto space-y-6" dir={isAr ? "rtl" : "ltr"}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-primary" />
+                {isAr ? "حساب المشرف العام" : "Super Admin Account"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                {isAr
+                  ? "أنت تمتلك المنصة — لا يوجد اشتراك أو فوترة على حسابك."
+                  : "You own the platform — no subscription or billing applies to your account."}
+              </p>
+              <Button asChild>
+                <Link to="/admin/subscriptions">
+                  {isAr ? "إدارة اشتراكات الأطباء" : "Manage doctor subscriptions"}
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -80,6 +126,19 @@ export default function BillingPage() {
               : "Pick a plan and it's activated instantly — no payment required."}
           </p>
         </div>
+
+        {PAYMENTS_TEST_MODE && (
+          <Alert className="border-amber-500/40 bg-amber-500/5">
+            <FlaskConical className="h-4 w-4 text-amber-600" />
+            <AlertTitle>{isAr ? "وضع الاختبار" : "Test mode"}</AlertTitle>
+            <AlertDescription>
+              {isAr
+                ? "تفعيل الخطة فوري ومجاني. لا يتم إجراء أي معاملة دفع فعلية."
+                : "Plan activation is instant and free. No real payment is processed."}
+            </AlertDescription>
+          </Alert>
+        )}
+
 
         {isLoading ? (
           <Skeleton className="h-48 w-full" />
