@@ -127,6 +127,19 @@ export default function BillingPage() {
           </p>
         </div>
 
+        {PAYMENTS_TEST_MODE && (
+          <Alert className="border-amber-500/40 bg-amber-500/5">
+            <FlaskConical className="h-4 w-4 text-amber-600" />
+            <AlertTitle>{isAr ? "وضع الاختبار" : "Test mode"}</AlertTitle>
+            <AlertDescription>
+              {isAr
+                ? "تفعيل الخطة فوري ومجاني. لا يتم إجراء أي معاملة دفع فعلية."
+                : "Plan activation is instant and free. No real payment is processed."}
+            </AlertDescription>
+          </Alert>
+        )}
+
+
         {isLoading ? (
           <Skeleton className="h-48 w-full" />
         ) : !sub ? (
